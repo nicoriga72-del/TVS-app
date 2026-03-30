@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TVS Sisal">
+  <meta name="theme-color" content="#002D5E">
+  <title>TVS · Sisal Gaming</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;900&family=Barlow+Condensed:wght@700;900&display=swap');
+    :root{--blue-deep:#002D5E;--blue-main:#003875;--blue-mid:#005BAA;--accent:#00A3E0;--accent2:#5BC4F5;--green:#22c55e;--orange:#f97316;--orange-dark:#ea6c0a;--safe-top:env(safe-area-inset-top,44px);--safe-bot:env(safe-area-inset-bottom,34px)}
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{width:100%;height:100%;overflow:hidden;background:var(--blue-deep);font-family:'Barlow',-apple-system,sans-serif}
+    #splash{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--blue-deep);z-index:999;transition:opacity .7s ease,transform .7s ease}
+    #splash.out{opacity:0;transform:scale(1.06);pointer-events:none}
+    .bg-shapes{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+    .shape{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(0,163,224,.18),transparent 70%)}
+    .s1{width:600px;height:600px;top:-200px;right:-150px;animation:drift 8s ease-in-out infinite alternate}
+    .s2{width:400px;height:400px;bottom:-100px;left:-100px;animation:drift 10s ease-in-out infinite alternate-reverse}
+    .grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(0,163,224,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,163,224,.05) 1px,transparent 1px);background-size:60px 60px}
+    @keyframes drift{from{transform:translate(0,0)}to{transform:translate(20px,30px)}}
+    .sp-content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center}
+    .arc-wrap{margin-bottom:28px;animation:popIn .9s cubic-bezier(.34,1.56,.64,1) .3s both}
+    @keyframes popIn{from{opacity:0;transform:scale(.5) translateY(50px)}to{opacity:1;transform:scale(1) translateY(0)}}
+    .arc-bg{width:150px;height:150px;border-radius:50%;background:radial-gradient(circle at 40% 40%,rgba(0,119,204,.4),rgba(0,56,117,.6));border:1px solid rgba(0,163,224,.25);display:flex;align-items:center;justify-content:center;box-shadow:0 0 60px rgba(0,163,224,.2)}
+    .sp-logo{width:110px;filter:brightness(0) invert(1)}
+    .sp-label{animation:fadeUp .6s ease .9s both;text-align:center}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+    .sp-title{color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:4px;text-transform:uppercase;opacity:.6}
+    .sp-tag{color:var(--accent2);font-size:11px;letter-spacing:1.5px;margin-top:5px;opacity:.7;font-style:italic}
+    .sp-dots{display:flex;gap:8px;margin-top:56px;animation:fadeUp .5s ease 1.2s both}
+    .sdot{width:7px;height:7px;border-radius:50%;background:rgba(0,163,224,.4);animation:sdotP 1.4s ease-in-out infinite}
+    .sdot:nth-child(2){animation-delay:.2s}.sdot:nth-child(3){animation-delay:.4s}
+    @keyframes sdotP{0%,100%{background:rgba(0,163,224,.3);transform:scale(1)}50%{background:rgba(0,163,224,1);transform:scale(1.4)}}
+    #app{position:fixed;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .5s ease}
+    #app.in{opacity:1;pointer-events:all}
+    .app-header{padding:calc(var(--safe-top)+6px) 20px 20px;background:linear-gradient(160deg,var(--blue-deep),var(--blue-main));position:relative;overflow:hidden;flex-shrink:0}
+    .hdr-arc{position:absolute;top:-80px;right:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(0,163,224,.1),transparent 70%);pointer-events:none}
+    .hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .hdr-logo{height:26px;filter:brightness(0) invert(1)}
+    .hdr-clock{color:rgba(255,255,255,.5);font-size:13px;font-weight:600}
+    .hdr-greet{color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:900;line-height:1;margin-bottom:3px}
+    .hdr-sub{color:rgba(255,255,255,.45);font-size:13px}
+    .app-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#f0f4f8;border-radius:28px 28px 0 0;padding:22px 16px calc(var(--safe-bot)+16px);display:flex;flex-direction:column;gap:14px}
+    .portali-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .portale-btn{border-radius:20px;padding:20px 16px;display:flex;flex-direction:column;align-items:flex-start;gap:12px;cursor:pointer;border:none;width:100%;text-align:left;position:relative;overflow:hidden;transition:transform .15s}
+    .portale-btn:active{transform:scale(.96)}
+    .portale-btn::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.1),transparent 70%)}
+    .portale-normale{background:linear-gradient(135deg,var(--blue-main),var(--blue-mid));box-shadow:0 6px 22px rgba(0,56,117,.3)}
+    .portale-tecnico{background:linear-gradient(135deg,var(--orange-dark),var(--orange));box-shadow:0 6px 22px rgba(249,115,22,.3)}
+    .pb-icon{width:46px;height:46px;border-radius:13px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center}
+    .pb-badge{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.2);border-radius:7px;padding:3px 7px;font-size:9px;font-weight:800;color:white;letter-spacing:.5px;text-transform:uppercase}
+    .pb-title{color:white;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;line-height:1.1}
+    .pb-sub{color:rgba(255,255,255,.6);font-size:11px;margin-top:2px}
+    .form-card{background:#fff;border-radius:22px;padding:20px;box-shadow:0 2px 14px rgba(0,56,117,.07)}
+    .form-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .form-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:var(--blue-main);display:flex;align-items:center;gap:8px}
+    .clear-btn{background:#f0f4f8;border:none;border-radius:10px;padding:7px 13px;font-size:12px;font-weight:700;color:#888;cursor:pointer}
+    .form-section-label{font-size:10px;font-weight:800;color:#bbb;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px}
+    .form-divider{height:1px;background:#f0f4f8;margin:4px 0 16px}
+    .field-group{margin-bottom:14px}
+    .field-label{font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px;display:flex;align-items:center;gap:5px;transition:color .2s}
+    .field-label.filled{color:var(--green)}
+    .field-label .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
+    .field-row{display:flex;gap:8px;align-items:center}
+    .field-input{flex:1;border:1.5px solid #e8eef4;border-radius:13px;padding:13px 14px;font-size:15px;font-family:'Barlow',sans-serif;color:var(--blue-main);font-weight:600;outline:none;transition:border-color .2s,background .2s}
+    .field-input:focus{border-color:var(--accent);background:#f8fcff}
+    .field-input.filled{border-color:var(--green);background:#f0fff4}
+    .cam-btn{width:48px;height:48px;flex-shrink:0;background:linear-gradient(135deg,var(--accent),var(--blue-mid));border:none;border-radius:13px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 3px 10px rgba(0,163,224,.3);transition:transform .15s}
+    .cam-btn:active{transform:scale(.9)}
+    .submit-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+    .submit-btn{border:none;border-radius:16px;padding:15px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s}
+    .submit-btn:active{transform:scale(.97)}
+    .submit-normale{background:linear-gradient(135deg,var(--blue-main),var(--blue-mid));box-shadow:0 4px 14px rgba(0,56,117,.25)}
+    .submit-tecnico{background:linear-gradient(135deg,var(--orange-dark),var(--orange));box-shadow:0 4px 14px rgba(249,115,22,.25)}
+    .install-card{background:linear-gradient(135deg,#e8f4ff,#d4ecff);border-radius:18px;padding:14px 16px;display:flex;gap:12px;align-items:center;border:1px solid rgba(0,91,170,.12)}
+    .install-card.hidden{display:none}
+    .install-emoji{font-size:24px;flex-shrink:0}
+    .install-card strong{display:block;font-size:13px;font-weight:700;color:var(--blue-main);margin-bottom:2px}
+    .install-card span{font-size:11px;color:#555;line-height:1.5}
+    .app-footer{text-align:center;color:#bbb;font-size:11px;padding:4px 0}
+    #cameraModal{position:fixed;inset:0;z-index:500;background:#000;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .35s ease}
+    #cameraModal.open{opacity:1;pointer-events:all}
+    .cam-header{position:absolute;top:0;left:0;right:0;z-index:10;padding:calc(var(--safe-top)+8px) 20px 20px;background:linear-gradient(to bottom,rgba(0,0,0,.9),transparent);display:flex;align-items:center;gap:14px}
+    .cam-back{width:42px;height:42px;border-radius:13px;background:rgba(255,255,255,.15);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer}
+    .cam-back:active{background:rgba(255,255,255,.3)}
+    .cam-title-txt{color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900}
+    .cam-sub-txt{color:rgba(255,255,255,.5);font-size:12px}
+    #cameraVideo{width:100%;height:100%;object-fit:cover}
+    #cameraCanvas{display:none}
+    .cam-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+    .ocr-frame{width:82%;max-width:360px;height:130px;position:relative;border:2px solid rgba(0,163,224,.5);border-radius:14px}
+    .oc{position:absolute;width:22px;height:22px;border-color:var(--accent);border-style:solid}
+    .oc.tl{top:-2px;left:-2px;border-width:3px 0 0 3px;border-radius:4px 0 0 0}
+    .oc.tr{top:-2px;right:-2px;border-width:3px 3px 0 0;border-radius:0 4px 0 0}
+    .oc.bl{bottom:-2px;left:-2px;border-width:0 0 3px 3px;border-radius:0 0 0 4px}
+    .oc.br{bottom:-2px;right:-2px;border-width:0 3px 3px 0;border-radius:0 0 4px 0}
+    .ocr-laser{position:absolute;left:8px;right:8px;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:laserY 2s ease-in-out infinite;box-shadow:0 0 8px rgba(0,163,224,.9)}
+    @keyframes laserY{0%{top:10%;opacity:.3}50%{top:85%;opacity:1}100%{top:10%;opacity:.3}}
+    .cam-footer{position:absolute;bottom:0;left:0;right:0;padding:24px 20px calc(var(--safe-bot)+28px);background:linear-gradient(to top,rgba(0,0,0,.88),transparent);display:flex;flex-direction:column;align-items:center;gap:16px}
+    .cam-hint-txt{color:rgba(255,255,255,.6);font-size:13px;text-align:center}
+    .shutter{width:74px;height:74px;border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s;box-shadow:0 4px 22px rgba(0,0,0,.4)}
+    .shutter:active{transform:scale(.88)}
+    .shutter-inner{width:56px;height:56px;border-radius:50%;background:var(--blue-mid)}
+    #ocrLoading{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;opacity:0;pointer-events:none;transition:opacity .3s;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+    #ocrLoading.open{opacity:1;pointer-events:all}
+    .ocr-spinner{width:56px;height:56px;border:3px solid rgba(0,163,224,.2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .ocr-load-title{color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700}
+    .ocr-load-sub{color:rgba(255,255,255,.5);font-size:13px}
+    .ocr-prog{width:200px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden}
+    .ocr-prog-bar{height:100%;background:var(--accent);border-radius:2px;transition:width .3s ease;width:0%}
+    #resultSheet{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.65);display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .3s;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+    #resultSheet.open{opacity:1;pointer-events:all}
+    .rs-body{background:#fff;border-radius:28px 28px 0 0;width:100%;padding:24px 20px calc(var(--safe-bot)+20px);transform:translateY(100%);transition:transform .4s cubic-bezier(.34,1.2,.64,1);max-height:85vh;overflow-y:auto}
+    #resultSheet.open .rs-body{transform:translateY(0)}
+    .rs-handle{width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 20px}
+    .rs-icon-wrap{width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,#22c55e,#16a34a);margin:0 auto 14px;display:flex;align-items:center;justify-content:center}
+    .rs-title{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--blue-main);text-align:center;margin-bottom:4px}
+    .rs-sub{font-size:13px;color:#888;text-align:center;margin-bottom:20px}
+    .rs-val-box{background:#f0f4f8;border-radius:16px;padding:16px 18px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+    .rs-val-label{font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.8px;min-width:80px}
+    .rs-val-code{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--blue-main);flex:1;word-break:break-all}
+    .copy-mini{background:var(--blue-mid);border:none;border-radius:8px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0}
+    .rs-raw-box{background:#f8f8f8;border-radius:14px;padding:14px;margin-bottom:20px}
+    .rs-raw-label{font-size:10px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+    .rs-raw-txt{font-size:11px;color:#888;line-height:1.6;font-family:monospace;white-space:pre-wrap;word-break:break-all}
+    .rs-actions{display:flex;gap:10px}
+    .rs-confirm{flex:2;background:linear-gradient(135deg,var(--blue-main),var(--blue-mid));border:none;border-radius:16px;padding:16px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:900;cursor:pointer;transition:transform .15s}
+    .rs-confirm:active{transform:scale(.97)}
+    .rs-retry{flex:1;background:#f0f4f8;border:none;border-radius:16px;padding:16px;color:var(--blue-main);font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:900;cursor:pointer}
+    .toast{position:fixed;bottom:calc(var(--safe-bot)+24px);left:50%;transform:translateX(-50%) translateY(20px);background:rgba(20,20,20,.92);color:#fff;padding:10px 22px;border-radius:22px;font-size:13px;font-weight:600;opacity:0;transition:opacity .3s,transform .3s;white-space:nowrap;z-index:999;backdrop-filter:blur(8px)}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  </style>
+</head>
+<body>
+<div id="splash">
+  <div class="bg-shapes"><div class="shape s1"></div><div class="shape s2"></div><div class="grid-bg"></div></div>
+  <div class="sp-content">
+    <div class="arc-wrap"><div class="arc-bg"><img class="sp-logo" src="https://cms.tvs-servizi.com/Sisal/images/tvs_scs_rico.png" onerror="this.style.display='none'" alt="TVS"></div></div>
+    <div class="sp-label"><div class="sp-title">Sisal Gaming · CMS</div><div class="sp-tag">Believe in the Power of Us®</div></div>
+  </div>
+  <div class="sp-dots"><div class="sdot"></div><div class="sdot"></div><div class="sdot"></div></div>
+</div>
+
+<div id="app">
+  <div class="app-header">
+    <div class="hdr-arc"></div>
+    <div class="hdr-top">
+      <img class="hdr-logo" src="https://cms.tvs-servizi.com/Sisal/images/tvs_scs_rico.png" onerror="this.style.display='none'" alt="TVS">
+      <div class="hdr-clock" id="clockEl"></div>
+    </div>
+    <div class="hdr-greet" id="greetEl">Buongiorno</div>
+    <div class="hdr-sub">Gestione Ticket · Territorio</div>
+  </div>
+  <div class="app-body">
+    <div class="portali-row">
+      <button class="portale-btn portale-normale" onclick="apri('normale')">
+        <div class="pb-badge">ADMIN</div>
+        <div class="pb-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
+        <div><div class="pb-title">Portale Normale</div><div class="pb-sub">Accesso standard</div></div>
+      </button>
+      <button class="portale-btn portale-tecnico" onclick="apri('tecnico')">
+        <div class="pb-badge">TECNICO</div>
+        <div class="pb-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+        <div><div class="pb-title">Portale Tecnico</div><div class="pb-sub">Accesso tecnici</div></div>
+      </button>
+    </div>
+
+    <div class="form-card">
+      <div class="form-header">
+        <div class="form-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue-main)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Chiusura Ticket</div>
+        <button class="clear-btn" onclick="clearAll()">✕ Pulisci</button>
+      </div>
+      <div class="form-section-label">📋 Dati Ticket</div>
+      <div class="field-group">
+        <div class="field-label" id="lbl-ticket"><div class="dot"></div>Numero Ticket</div>
+        <div class="field-row">
+          <input class="field-input" id="f-ticket" type="text" placeholder="Es. CAS-7416094-H5S7L1" oninput="checkFilled('f-ticket','lbl-ticket')">
+          <button class="cam-btn" onclick="openCamera('ticket')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
+        </div>
+      </div>
+      <div class="form-divider"></div>
+      <div class="form-section-label">🔧 Seriali Parti</div>
+      <div class="field-group">
+        <div class="field-label" id="lbl-asset"><div class="dot"></div>Serial Asset</div>
+        <div class="field-row">
+          <input class="field-input" id="f-asset" type="text" placeholder="Seriale asset" oninput="checkFilled('f-asset','lbl-asset')">
+          <button class="cam-btn" onclick="openCamera('asset')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field-label" id="lbl-parte-inst"><div class="dot"></div>Serial Parte Installata</div>
+        <div class="field-row">
+          <input class="field-input" id="f-parte-inst" type="text" placeholder="Seriale parte installata" oninput="checkFilled('f-parte-inst','lbl-parte-inst')">
+          <button class="cam-btn" onclick="openCamera('parte-inst')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field-label" id="lbl-parte-guasta"><div class="dot"></div>Serial Parte Guasta / DOA</div>
+        <div class="field-row">
+          <input class="field-input" id="f-parte-guasta" type="text" placeholder="Seriale parte guasta" oninput="checkFilled('f-parte-guasta','lbl-parte-guasta')">
+          <button class="cam-btn" onclick="openCamera('parte-guasta')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field-label" id="lbl-stag"><div class="dot"></div>Service Tag</div>
+        <div class="field-row">
+          <input class="field-input" id="f-stag" type="text" placeholder="Service tag" oninput="checkFilled('f-stag','lbl-stag')">
+          <button class="cam-btn" onclick="openCamera('stag')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
+        </div>
+      </div>
+      <div class="submit-row">
+        <button class="submit-btn submit-normale" onclick="apriConDati('normale')">▶ Portale Admin</button>
+        <button class="submit-btn submit-tecnico" onclick="apriConDati('tecnico')">▶ Portale Tecnico</button>
+      </div>
+    </div>
+
+    <div class="install-card" id="installCard">
+      <div class="install-emoji">📲</div>
+      <div><strong>Aggiungi alla schermata Home</strong><span>Tocca <b>Condividi ⬆️</b> in Safari → <b>"Aggiungi a schermata Home"</b></span></div>
+    </div>
+    <div class="app-footer">TVS Supply Chain Solutions · Sisal Gaming · Believe in the Power of Us®</div>
+  </div>
+</div>
+
+<div id="cameraModal">
+  <video id="cameraVideo" autoplay playsinline muted></video>
+  <canvas id="cameraCanvas"></canvas>
+  <div class="cam-header">
+    <button class="cam-back" onclick="closeCamera()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <div><div class="cam-title-txt" id="camTitle">Scansiona</div><div class="cam-sub-txt">Inquadra il codice nel riquadro</div></div>
+  </div>
+  <div class="cam-overlay"><div class="ocr-frame"><div class="oc tl"></div><div class="oc tr"></div><div class="oc bl"></div><div class="oc br"></div><div class="ocr-laser"></div></div></div>
+  <div class="cam-footer">
+    <div class="cam-hint-txt">Avvicina · buona luce · tieni fermo · poi scatta</div>
+    <div class="shutter" onclick="captureAndOCR()"><div class="shutter-inner"></div></div>
+  </div>
+</div>
+
+<div id="ocrLoading">
+  <div class="ocr-spinner"></div>
+  <div class="ocr-load-title">Lettura OCR…</div>
+  <div class="ocr-load-sub">Riconoscimento testo in corso</div>
+  <div class="ocr-prog"><div class="ocr-prog-bar" id="ocrBar"></div></div>
+</div>
+
+<div id="resultSheet">
+  <div class="rs-body">
+    <div class="rs-handle"></div>
+    <div class="rs-icon-wrap"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+    <div class="rs-title">Testo Rilevato</div>
+    <div class="rs-sub" id="rsSub">Verifica e conferma il codice</div>
+    <div class="rs-val-box"><div class="rs-val-label" id="rsLabel">Campo</div><div class="rs-val-code" id="rsValue">—</div><button class="copy-mini" onclick="copiaValore()">COPIA</button></div>
+    <div class="rs-raw-box"><div class="rs-raw-label">Testo grezzo OCR</div><div class="rs-raw-txt" id="rsRaw"></div></div>
+    <div class="rs-actions">
+      <button class="rs-confirm" onclick="confirmOCR()">✓ Usa questo codice</button>
+      <button class="rs-retry" onclick="retryOCR()">↺ Riprova</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const PORTALI={normale:'https://cms.tvs-servizi.com/Sisal/log_in.aspx',tecnico:'https://cms.tvs-servizi.com/Sisal/login.aspx'};
+const FIELDS={'ticket':{label:'Numero Ticket',id:'f-ticket',lbl:'lbl-ticket'},'asset':{label:'Serial Asset',id:'f-asset',lbl:'lbl-asset'},'parte-inst':{label:'Serial Parte Installata',id:'f-parte-inst',lbl:'lbl-parte-inst'},'parte-guasta':{label:'Serial Parte Guasta',id:'f-parte-guasta',lbl:'lbl-parte-guasta'},'stag':{label:'Service Tag',id:'f-stag',lbl:'lbl-stag'}};
+let currentField=null,currentValue='',videoStream=null;
+function tick(){const n=new Date();document.getElementById('clockEl').textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');const h=n.getHours();document.getElementById('greetEl').textContent=h<5?'Buonanotte':h<12?'Buongiorno':h<18?'Buon pomeriggio':'Buonasera';}
+tick();setInterval(tick,30000);
+setTimeout(()=>{document.getElementById('splash').classList.add('out');setTimeout(()=>{document.getElementById('splash').style.display='none';document.getElementById('app').classList.add('in');},700);},2800);
+const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase());
+if(!isIOS||window.navigator.standalone)document.getElementById('installCard').classList.add('hidden');
+function apri(tipo){window.location.href=PORTALI[tipo];}
+function apriConDati(tipo){const t=document.getElementById('f-ticket').value.trim();if(t){navigator.clipboard.writeText(t).catch(()=>{});showToast('📋 Numero ticket copiato!');}setTimeout(()=>{window.location.href=PORTALI[tipo];},900);}
+function checkFilled(iId,lId){const v=document.getElementById(iId).value.trim();document.getElementById(iId).classList.toggle('filled',!!v);document.getElementById(lId).classList.toggle('filled',!!v);}
+function clearAll(){Object.values(FIELDS).forEach(f=>{document.getElementById(f.id).value='';checkFilled(f.id,f.lbl);});showToast('🗑 Campi puliti');}
+function openCamera(field){currentField=field;document.getElementById('camTitle').textContent='Scansiona: '+FIELDS[field].label;document.getElementById('cameraModal').classList.add('open');startCamera();}
+async function startCamera(){try{videoStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}}});document.getElementById('cameraVideo').srcObject=videoStream;}catch(e){showToast('⚠️ Permesso telecamera negato');closeCamera();}}
+function closeCamera(){if(videoStream){videoStream.getTracks().forEach(t=>t.stop());videoStream=null;}document.getElementById('cameraVideo').srcObject=null;document.getElementById('cameraModal').classList.remove('open');}
+async function captureAndOCR(){const video=document.getElementById('cameraVideo'),canvas=document.getElementById('cameraCanvas');canvas.width=video.videoWidth;canvas.height=video.videoHeight;const ctx=canvas.getContext('2d');ctx.drawImage(video,0,0);const img=ctx.getImageData(0,0,canvas.width,canvas.height),d=img.data;for(let i=0;i<d.length;i+=4){const g=d[i]*.299+d[i+1]*.587+d[i+2]*.114,v=g>128?Math.min(255,g*1.4):Math.max(0,g*.6);d[i]=d[i+1]=d[i+2]=v;}ctx.putImageData(img,0,0);closeCamera();document.getElementById('ocrLoading').classList.add('open');try{const result=await Tesseract.recognize(canvas,'eng',{logger:m=>{if(m.status==='recognizing text')document.getElementById('ocrBar').style.width=(m.progress*100)+'%';}});document.getElementById('ocrLoading').classList.remove('open');showResult(result.data.text);}catch(e){document.getElementById('ocrLoading').classList.remove('open');showToast('⚠️ OCR fallito — riprova con più luce');}}
+function parseOCR(raw,field){const text=raw.replace(/\n/g,' ').replace(/\s+/g,' ').trim();if(field==='ticket'){const m=text.match(/\b([A-Z]{2,5}[-_]?\d{5,10}[-_]?[A-Z0-9]{3,10})\b/i);if(m)return m[1].toUpperCase();}const tokens=text.match(/\b([A-Z0-9]{6,25})\b/gi)||[];const best=tokens.map(t=>t.toUpperCase()).filter(t=>/[A-Z]/.test(t)&&/[0-9]/.test(t)).sort((a,b)=>b.length-a.length);return best[0]||'';}
+function showResult(rawText){const extracted=parseOCR(rawText,currentField);currentValue=extracted;const info=FIELDS[currentField];document.getElementById('rsLabel').textContent=info.label;document.getElementById('rsValue').textContent=extracted||'—';document.getElementById('rsSub').textContent=extracted?'Controlla e premi "Usa questo"':'Testo non riconosciuto — riprova';document.getElementById('rsRaw').textContent=rawText.trim().slice(0,400);document.getElementById('resultSheet').classList.add('open');}
+function confirmOCR(){if(!currentValue||currentValue==='—'){showToast('⚠️ Nessun codice — riprova');return;}const info=FIELDS[currentField];document.getElementById(info.id).value=currentValue;checkFilled(info.id,info.lbl);document.getElementById('resultSheet').classList.remove('open');showToast('✅ '+info.label+' compilato!');}
+function retryOCR(){document.getElementById('resultSheet').classList.remove('open');setTimeout(()=>openCamera(currentField),400);}
+function copiaValore(){if(currentValue)navigator.clipboard.writeText(currentValue).then(()=>showToast('✅ Copiato!')).catch(()=>showToast('⚠️ Copia non riuscita'));}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+</script>
+</body>
+</html>
