@@ -228,7 +228,16 @@
     flex-direction: column;
   }
   #scanner-overlay.active { display: flex; }
-  #scanner-video { width: 100%; flex: 1; object-fit: cover; }
+  #reader { width: 100%; flex: 1; }
+  #reader video { width: 100% !important; height: 100% !important; object-fit: cover; }
+  .ocr-spinner {
+    width: 48px; height: 48px;
+    border: 4px solid rgba(255,255,255,0.2);
+    border-top-color: var(--azzurro);
+    border-radius: 50%;
+    animation: ocrspin 0.8s linear infinite;
+  }
+  @keyframes ocrspin { to { transform: rotate(360deg); } }
   .scanner-ui {
     position: absolute;
     inset: 0;
@@ -571,16 +580,19 @@
 
 <!-- SCANNER OVERLAY -->
 <div id="scanner-overlay">
-  <video id="scanner-video" autoplay playsinline muted></video>
-  <div class="scanner-ui">
-    <div class="scanner-frame"><span></span></div>
-    <div class="scanner-line"></div>
-    <div class="scanner-hint">Inquadra il barcode o QR code</div>
-  </div>
+  <div id="reader" style="width:100%;flex:1;background:#000;overflow:hidden;"></div>
   <div class="scanner-bottom">
     <div class="scanner-target" id="scanner-target-label">SCANSIONE IN CORSO</div>
+    <div style="text-align:center;color:rgba(255,255,255,0.7);font-size:12px;margin-bottom:12px;">Inquadra un barcode/QR — oppure usa "Leggi testo" per i codici stampati</div>
+    <button class="scanner-close" id="ocr-btn" style="background:#00b86b;color:#fff;border:none;margin-bottom:10px;font-weight:700;" onclick="ocrCapture()">🔤 Leggi testo (OCR)</button>
+    <button class="scanner-close" id="torch-btn" style="background:rgba(255,193,7,0.15);color:#ffc107;border:1px solid rgba(255,193,7,0.4);margin-bottom:10px;font-weight:700;display:none;" onclick="toggleTorch()">🔦 Torcia</button>
     <button class="scanner-close" style="background:var(--azzurro);color:#001b33;border:none;margin-bottom:10px;font-weight:700;" onclick="manualEntry()">⌨ Inserimento manuale</button>
     <button class="scanner-close" onclick="closeScanner()">✕ Annulla scansione</button>
+  </div>
+  <div id="ocr-loading" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.85);z-index:10;flex-direction:column;align-items:center;justify-content:center;color:#fff;">
+    <div class="ocr-spinner"></div>
+    <div style="margin-top:18px;font-size:15px;font-weight:600;">Lettura testo in corso…</div>
+    <div id="ocr-progress" style="margin-top:6px;font-size:13px;color:var(--azzurro);font-family:'DM Mono',monospace;">0%</div>
   </div>
 </div>
 
@@ -589,7 +601,7 @@
   <div style="padding: 40px 20px 20px; text-align:center;">
     <div style="width:72px;height:72px;background:linear-gradient(135deg,var(--navy),var(--azzurro));border-radius:20px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:36px;box-shadow:0 8px 32px rgba(0,59,116,0.3);">🎰</div>
     <div style="font-size:22px;font-weight:700;color:var(--navy);">Chiusura Ticket</div>
-    <div style="font-size:14px;color:var(--text-muted);margin-top:6px;">Portale Tecnici TVS SCS · <b style="color:var(--azzurro)">v3.0 ZXing</b></div>
+    <div style="font-size:14px;color:var(--text-muted);margin-top:6px;">Portale Tecnici TVS SCS · <b style="color:var(--azzurro)">v5.0 OCR</b></div>
   </div>
   <div class="card">
     <div class="card-title"><div class="icon">🔑</div>Accesso</div>
@@ -882,7 +894,8 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/dist/tesseract.min.js"></script>
 <script>
 // ============================================================
 // STATE
@@ -903,87 +916,182 @@ const state = {
 const STEPS = ['Login','Info Ticket','Soluzione','Parti','Riepilogo'];
 
 // ============================================================
-// SCAN ENGINE (ZXing — funziona su iOS Safari + Android, tutti i formati)
+// SCAN ENGINE (html5-qrcode — affidabile su iOS Safari + Android)
 // ============================================================
-let zxingReader = null;
+let h5qr = null;
 let scanTarget = null;
-let scanActive = false;
+let scanLocked = false;
+let torchOn = false;
+let currentTrack = null;
 
 async function startScan(fieldId, label) {
   scanTarget = fieldId;
+  scanLocked = false;
+  torchOn = false;
   document.getElementById('scanner-target-label').textContent = label;
-  const overlay = document.getElementById('scanner-overlay');
-  overlay.classList.add('active');
-  scanActive = true;
+  document.getElementById('scanner-overlay').classList.add('active');
+  document.getElementById('torch-btn').style.display = 'none';
 
-  if (typeof ZXing === 'undefined') {
+  if (typeof Html5Qrcode === 'undefined') {
     showToast('Libreria scanner non caricata', 'error');
     manualEntry();
     return;
   }
 
+  const F = Html5QrcodeSupportedFormats;
+  const formats = [
+    F.QR_CODE, F.CODE_128, F.CODE_39, F.CODE_93, F.CODABAR,
+    F.EAN_13, F.EAN_8, F.UPC_A, F.UPC_E, F.ITF,
+    F.DATA_MATRIX, F.AZTEC, F.PDF_417
+  ];
+
   try {
-    // Hints: leggi TUTTI i formati (1D + 2D)
-    const hints = new Map();
-    const formats = [
-      ZXing.BarcodeFormat.CODE_128, ZXing.BarcodeFormat.CODE_39,
-      ZXing.BarcodeFormat.CODE_93, ZXing.BarcodeFormat.CODABAR,
-      ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.EAN_8,
-      ZXing.BarcodeFormat.UPC_A, ZXing.BarcodeFormat.UPC_E,
-      ZXing.BarcodeFormat.ITF, ZXing.BarcodeFormat.QR_CODE,
-      ZXing.BarcodeFormat.DATA_MATRIX, ZXing.BarcodeFormat.AZTEC,
-      ZXing.BarcodeFormat.PDF_417, ZXing.BarcodeFormat.RSS_14,
-      ZXing.BarcodeFormat.MAXICODE
-    ];
-    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
-    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+    h5qr = new Html5Qrcode('reader', { formatsToSupport: formats, verbose: false });
+    const config = {
+      fps: 12,
+      // box largo per i barcode 1D (sono larghi e bassi)
+      qrbox: (vw, vh) => {
+        const w = Math.floor(Math.min(vw, 480) * 0.92);
+        const h = Math.floor(Math.min(vh, 360) * 0.45);
+        return { width: w, height: h };
+      },
+      aspectRatio: 1.3333,
+      experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+      rememberLastUsedCamera: false
+    };
 
-    zxingReader = new ZXing.BrowserMultiFormatReader(hints, 300);
-
-    // Seleziona camera posteriore se disponibile
-    let deviceId = undefined;
-    try {
-      const devices = await zxingReader.listVideoInputDevices();
-      const back = devices.find(d => /back|rear|environment|posteriore/i.test(d.label));
-      deviceId = back ? back.deviceId : (devices.length ? devices[devices.length - 1].deviceId : undefined);
-    } catch(e) {}
-
-    zxingReader.decodeFromVideoDevice(deviceId, 'scanner-video', (result, err) => {
-      if (result && scanActive) {
+    await h5qr.start(
+      { facingMode: 'environment' },
+      config,
+      (decodedText) => {
+        if (scanLocked) return;
+        scanLocked = true;
         if (navigator.vibrate) navigator.vibrate(120);
-        onScanResult(result.getText());
-      }
-    });
+        onScanResult(decodedText);
+      },
+      () => {} // ignora i frame senza codice
+    );
+
+    // Prova ad attivare il pulsante torcia se il dispositivo lo supporta
+    setTimeout(setupTorch, 800);
   } catch(e) {
-    showToast('Fotocamera non disponibile: ' + e.message, 'error');
+    showToast('Fotocamera non disponibile', 'error');
     manualEntry();
+  }
+}
+
+function setupTorch() {
+  try {
+    const video = document.querySelector('#reader video');
+    if (video && video.srcObject) {
+      currentTrack = video.srcObject.getVideoTracks()[0];
+      const caps = currentTrack.getCapabilities ? currentTrack.getCapabilities() : {};
+      if (caps && caps.torch) {
+        document.getElementById('torch-btn').style.display = 'block';
+      }
+    }
+  } catch(e) {}
+}
+
+async function toggleTorch() {
+  if (!currentTrack) return;
+  try {
+    torchOn = !torchOn;
+    await currentTrack.applyConstraints({ advanced: [{ torch: torchOn }] });
+  } catch(e) { showToast('Torcia non disponibile', 'error'); }
+}
+
+// ── OCR: legge il testo stampato dal frame corrente ──
+async function ocrCapture() {
+  const video = document.querySelector('#reader video');
+  if (!video || !video.videoWidth) { showToast('Inquadra prima il codice', 'error'); return; }
+  if (typeof Tesseract === 'undefined') { showToast('OCR non disponibile', 'error'); return; }
+
+  const loading = document.getElementById('ocr-loading');
+  loading.style.display = 'flex';
+  document.getElementById('ocr-progress').textContent = '0%';
+
+  try {
+    // Cattura la zona centrale del frame (dove inquadra il tecnico)
+    const vw = video.videoWidth, vh = video.videoHeight;
+    const cropW = Math.floor(vw * 0.85);
+    const cropH = Math.floor(vh * 0.30);
+    const cropX = Math.floor((vw - cropW) / 2);
+    const cropY = Math.floor((vh - cropH) / 2);
+
+    const canvas = document.createElement('canvas');
+    // Upscale 2x per migliorare la lettura
+    canvas.width = cropW * 2;
+    canvas.height = cropH * 2;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, canvas.width, canvas.height);
+
+    // Migliora il contrasto (bianco/nero) per l'OCR
+    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const d = img.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const gray = 0.3 * d[i] + 0.59 * d[i+1] + 0.11 * d[i+2];
+      const bw = gray > 135 ? 255 : 0;
+      d[i] = d[i+1] = d[i+2] = bw;
+    }
+    ctx.putImageData(img, 0, 0);
+
+    const result = await Tesseract.recognize(canvas, 'eng', {
+      logger: m => {
+        if (m.status === 'recognizing text') {
+          document.getElementById('ocr-progress').textContent = Math.round(m.progress * 100) + '%';
+        }
+      },
+      tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-/.',
+    });
+
+    loading.style.display = 'none';
+    const raw = (result.data.text || '').trim();
+    // Prendi il token alfanumerico più lungo (di solito è il codice)
+    const tokens = raw.split(/\s+/).filter(t => t.replace(/[^A-Za-z0-9]/g,'').length >= 3);
+    let best = tokens.sort((a,b) => b.length - a.length)[0] || raw.replace(/\s+/g,'');
+    best = best.replace(/[^A-Za-z0-9\-\/.]/g,'').trim();
+
+    if (best) {
+      scanLocked = true;
+      onScanResult(best);
+    } else {
+      showToast('Testo non riconosciuto, riprova', 'error');
+    }
+  } catch(e) {
+    loading.style.display = 'none';
+    showToast('Errore OCR, riprova', 'error');
   }
 }
 
 function manualEntry() {
   const val = prompt('Inserisci il codice manualmente:');
-  if (val && val.trim()) onScanResult(val.trim());
+  if (val && val.trim()) { scanLocked = true; onScanResult(val.trim()); }
   else closeScanner();
 }
 
 function onScanResult(val) {
-  closeScanner();
   if (scanTarget) {
     const field = document.getElementById(scanTarget);
     if (field) { field.value = val; field.dispatchEvent(new Event('input')); }
     showToast('✓ ' + val.substring(0,30), 'success');
   }
+  closeScanner();
 }
 
-function closeScanner() {
-  scanActive = false;
-  if (zxingReader) {
-    try { zxingReader.reset(); } catch(e) {}
-    zxingReader = null;
-  }
+async function closeScanner() {
   document.getElementById('scanner-overlay').classList.remove('active');
-  const v = document.getElementById('scanner-video');
-  if (v.srcObject) { v.srcObject.getTracks().forEach(t => t.stop()); v.srcObject = null; }
+  document.getElementById('torch-btn').style.display = 'none';
+  document.getElementById('ocr-loading').style.display = 'none';
+  currentTrack = null;
+  if (h5qr) {
+    try { await h5qr.stop(); } catch(e) {}
+    try { await h5qr.clear(); } catch(e) {}
+    h5qr = null;
+  }
+  const reader = document.getElementById('reader');
+  if (reader) reader.innerHTML = '';
 }
 
 // ============================================================
