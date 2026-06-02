@@ -1,293 +1,1532 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="TVS Sisal">
-  <meta name="theme-color" content="#002D5E">
-  <title>TVS · Sisal Gaming</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;900&family=Barlow+Condensed:wght@700;900&display=swap');
-    :root{--blue-deep:#002D5E;--blue-main:#003875;--blue-mid:#005BAA;--accent:#00A3E0;--accent2:#5BC4F5;--green:#22c55e;--orange:#f97316;--orange-dark:#ea6c0a;--safe-top:env(safe-area-inset-top,44px);--safe-bot:env(safe-area-inset-bottom,34px)}
-    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    html,body{width:100%;height:100%;overflow:hidden;background:var(--blue-deep);font-family:'Barlow',-apple-system,sans-serif}
-    #splash{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--blue-deep);z-index:999;transition:opacity .7s ease,transform .7s ease}
-    #splash.out{opacity:0;transform:scale(1.06);pointer-events:none}
-    .bg-shapes{position:absolute;inset:0;overflow:hidden;pointer-events:none}
-    .shape{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(0,163,224,.18),transparent 70%)}
-    .s1{width:600px;height:600px;top:-200px;right:-150px;animation:drift 8s ease-in-out infinite alternate}
-    .s2{width:400px;height:400px;bottom:-100px;left:-100px;animation:drift 10s ease-in-out infinite alternate-reverse}
-    .grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(0,163,224,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,163,224,.05) 1px,transparent 1px);background-size:60px 60px}
-    @keyframes drift{from{transform:translate(0,0)}to{transform:translate(20px,30px)}}
-    .sp-content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center}
-    .arc-wrap{margin-bottom:28px;animation:popIn .9s cubic-bezier(.34,1.56,.64,1) .3s both}
-    @keyframes popIn{from{opacity:0;transform:scale(.5) translateY(50px)}to{opacity:1;transform:scale(1) translateY(0)}}
-    .arc-bg{width:150px;height:150px;border-radius:50%;background:radial-gradient(circle at 40% 40%,rgba(0,119,204,.4),rgba(0,56,117,.6));border:1px solid rgba(0,163,224,.25);display:flex;align-items:center;justify-content:center;box-shadow:0 0 60px rgba(0,163,224,.2)}
-    .sp-logo{width:110px;filter:brightness(0) invert(1)}
-    .sp-label{animation:fadeUp .6s ease .9s both;text-align:center}
-    @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-    .sp-title{color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:4px;text-transform:uppercase;opacity:.6}
-    .sp-tag{color:var(--accent2);font-size:11px;letter-spacing:1.5px;margin-top:5px;opacity:.7;font-style:italic}
-    .sp-dots{display:flex;gap:8px;margin-top:56px;animation:fadeUp .5s ease 1.2s both}
-    .sdot{width:7px;height:7px;border-radius:50%;background:rgba(0,163,224,.4);animation:sdotP 1.4s ease-in-out infinite}
-    .sdot:nth-child(2){animation-delay:.2s}.sdot:nth-child(3){animation-delay:.4s}
-    @keyframes sdotP{0%,100%{background:rgba(0,163,224,.3);transform:scale(1)}50%{background:rgba(0,163,224,1);transform:scale(1.4)}}
-    #app{position:fixed;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .5s ease}
-    #app.in{opacity:1;pointer-events:all}
-    .app-header{padding:calc(var(--safe-top)+6px) 20px 20px;background:linear-gradient(160deg,var(--blue-deep),var(--blue-main));position:relative;overflow:hidden;flex-shrink:0}
-    .hdr-arc{position:absolute;top:-80px;right:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(0,163,224,.1),transparent 70%);pointer-events:none}
-    .hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-    .hdr-logo{height:26px;filter:brightness(0) invert(1)}
-    .hdr-clock{color:rgba(255,255,255,.5);font-size:13px;font-weight:600}
-    .hdr-greet{color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:900;line-height:1;margin-bottom:3px}
-    .hdr-sub{color:rgba(255,255,255,.45);font-size:13px}
-    .app-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#f0f4f8;border-radius:28px 28px 0 0;padding:22px 16px calc(var(--safe-bot)+16px);display:flex;flex-direction:column;gap:14px}
-    .portali-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .portale-btn{border-radius:20px;padding:20px 16px;display:flex;flex-direction:column;align-items:flex-start;gap:12px;cursor:pointer;border:none;width:100%;text-align:left;position:relative;overflow:hidden;transition:transform .15s}
-    .portale-btn:active{transform:scale(.96)}
-    .portale-btn::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.1),transparent 70%)}
-    .portale-normale{background:linear-gradient(135deg,var(--blue-main),var(--blue-mid));box-shadow:0 6px 22px rgba(0,56,117,.3)}
-    .portale-tecnico{background:linear-gradient(135deg,var(--orange-dark),var(--orange));box-shadow:0 6px 22px rgba(249,115,22,.3)}
-    .pb-icon{width:46px;height:46px;border-radius:13px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center}
-    .pb-badge{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.2);border-radius:7px;padding:3px 7px;font-size:9px;font-weight:800;color:white;letter-spacing:.5px;text-transform:uppercase}
-    .pb-title{color:white;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;line-height:1.1}
-    .pb-sub{color:rgba(255,255,255,.6);font-size:11px;margin-top:2px}
-    .form-card{background:#fff;border-radius:22px;padding:20px;box-shadow:0 2px 14px rgba(0,56,117,.07)}
-    .form-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-    .form-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:var(--blue-main);display:flex;align-items:center;gap:8px}
-    .clear-btn{background:#f0f4f8;border:none;border-radius:10px;padding:7px 13px;font-size:12px;font-weight:700;color:#888;cursor:pointer}
-    .form-section-label{font-size:10px;font-weight:800;color:#bbb;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px}
-    .form-divider{height:1px;background:#f0f4f8;margin:4px 0 16px}
-    .field-group{margin-bottom:14px}
-    .field-label{font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px;display:flex;align-items:center;gap:5px;transition:color .2s}
-    .field-label.filled{color:var(--green)}
-    .field-label .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
-    .field-row{display:flex;gap:8px;align-items:center}
-    .field-input{flex:1;border:1.5px solid #e8eef4;border-radius:13px;padding:13px 14px;font-size:15px;font-family:'Barlow',sans-serif;color:var(--blue-main);font-weight:600;outline:none;transition:border-color .2s,background .2s}
-    .field-input:focus{border-color:var(--accent);background:#f8fcff}
-    .field-input.filled{border-color:var(--green);background:#f0fff4}
-    .cam-btn{width:48px;height:48px;flex-shrink:0;background:linear-gradient(135deg,var(--accent),var(--blue-mid));border:none;border-radius:13px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 3px 10px rgba(0,163,224,.3);transition:transform .15s}
-    .cam-btn:active{transform:scale(.9)}
-    .submit-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
-    .submit-btn{border:none;border-radius:16px;padding:15px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s}
-    .submit-btn:active{transform:scale(.97)}
-    .submit-normale{background:linear-gradient(135deg,var(--blue-main),var(--blue-mid));box-shadow:0 4px 14px rgba(0,56,117,.25)}
-    .submit-tecnico{background:linear-gradient(135deg,var(--orange-dark),var(--orange));box-shadow:0 4px 14px rgba(249,115,22,.25)}
-    .install-card{background:linear-gradient(135deg,#e8f4ff,#d4ecff);border-radius:18px;padding:14px 16px;display:flex;gap:12px;align-items:center;border:1px solid rgba(0,91,170,.12)}
-    .install-card.hidden{display:none}
-    .install-emoji{font-size:24px;flex-shrink:0}
-    .install-card strong{display:block;font-size:13px;font-weight:700;color:var(--blue-main);margin-bottom:2px}
-    .install-card span{font-size:11px;color:#555;line-height:1.5}
-    .app-footer{text-align:center;color:#bbb;font-size:11px;padding:4px 0}
-    #cameraModal{position:fixed;inset:0;z-index:500;background:#000;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .35s ease}
-    #cameraModal.open{opacity:1;pointer-events:all}
-    .cam-header{position:absolute;top:0;left:0;right:0;z-index:10;padding:calc(var(--safe-top)+8px) 20px 20px;background:linear-gradient(to bottom,rgba(0,0,0,.9),transparent);display:flex;align-items:center;gap:14px}
-    .cam-back{width:42px;height:42px;border-radius:13px;background:rgba(255,255,255,.15);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer}
-    .cam-back:active{background:rgba(255,255,255,.3)}
-    .cam-title-txt{color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900}
-    .cam-sub-txt{color:rgba(255,255,255,.5);font-size:12px}
-    #cameraVideo{width:100%;height:100%;object-fit:cover}
-    #cameraCanvas{display:none}
-    .cam-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
-    .ocr-frame{width:82%;max-width:360px;height:130px;position:relative;border:2px solid rgba(0,163,224,.5);border-radius:14px}
-    .oc{position:absolute;width:22px;height:22px;border-color:var(--accent);border-style:solid}
-    .oc.tl{top:-2px;left:-2px;border-width:3px 0 0 3px;border-radius:4px 0 0 0}
-    .oc.tr{top:-2px;right:-2px;border-width:3px 3px 0 0;border-radius:0 4px 0 0}
-    .oc.bl{bottom:-2px;left:-2px;border-width:0 0 3px 3px;border-radius:0 0 0 4px}
-    .oc.br{bottom:-2px;right:-2px;border-width:0 3px 3px 0;border-radius:0 0 4px 0}
-    .ocr-laser{position:absolute;left:8px;right:8px;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:laserY 2s ease-in-out infinite;box-shadow:0 0 8px rgba(0,163,224,.9)}
-    @keyframes laserY{0%{top:10%;opacity:.3}50%{top:85%;opacity:1}100%{top:10%;opacity:.3}}
-    .cam-footer{position:absolute;bottom:0;left:0;right:0;padding:24px 20px calc(var(--safe-bot)+28px);background:linear-gradient(to top,rgba(0,0,0,.88),transparent);display:flex;flex-direction:column;align-items:center;gap:16px}
-    .cam-hint-txt{color:rgba(255,255,255,.6);font-size:13px;text-align:center}
-    .shutter{width:74px;height:74px;border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s;box-shadow:0 4px 22px rgba(0,0,0,.4)}
-    .shutter:active{transform:scale(.88)}
-    .shutter-inner{width:56px;height:56px;border-radius:50%;background:var(--blue-mid)}
-    #ocrLoading{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;opacity:0;pointer-events:none;transition:opacity .3s;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
-    #ocrLoading.open{opacity:1;pointer-events:all}
-    .ocr-spinner{width:56px;height:56px;border:3px solid rgba(0,163,224,.2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .ocr-load-title{color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700}
-    .ocr-load-sub{color:rgba(255,255,255,.5);font-size:13px}
-    .ocr-prog{width:200px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden}
-    .ocr-prog-bar{height:100%;background:var(--accent);border-radius:2px;transition:width .3s ease;width:0%}
-    #resultSheet{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.65);display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .3s;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-    #resultSheet.open{opacity:1;pointer-events:all}
-    .rs-body{background:#fff;border-radius:28px 28px 0 0;width:100%;padding:24px 20px calc(var(--safe-bot)+20px);transform:translateY(100%);transition:transform .4s cubic-bezier(.34,1.2,.64,1);max-height:85vh;overflow-y:auto}
-    #resultSheet.open .rs-body{transform:translateY(0)}
-    .rs-handle{width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 20px}
-    .rs-icon-wrap{width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,#22c55e,#16a34a);margin:0 auto 14px;display:flex;align-items:center;justify-content:center}
-    .rs-title{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--blue-main);text-align:center;margin-bottom:4px}
-    .rs-sub{font-size:13px;color:#888;text-align:center;margin-bottom:20px}
-    .rs-val-box{background:#f0f4f8;border-radius:16px;padding:16px 18px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
-    .rs-val-label{font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.8px;min-width:80px}
-    .rs-val-code{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--blue-main);flex:1;word-break:break-all}
-    .copy-mini{background:var(--blue-mid);border:none;border-radius:8px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0}
-    .rs-raw-box{background:#f8f8f8;border-radius:14px;padding:14px;margin-bottom:20px}
-    .rs-raw-label{font-size:10px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
-    .rs-raw-txt{font-size:11px;color:#888;line-height:1.6;font-family:monospace;white-space:pre-wrap;word-break:break-all}
-    .rs-actions{display:flex;gap:10px}
-    .rs-confirm{flex:2;background:linear-gradient(135deg,var(--blue-main),var(--blue-mid));border:none;border-radius:16px;padding:16px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:900;cursor:pointer;transition:transform .15s}
-    .rs-confirm:active{transform:scale(.97)}
-    .rs-retry{flex:1;background:#f0f4f8;border:none;border-radius:16px;padding:16px;color:var(--blue-main);font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:900;cursor:pointer}
-    .toast{position:fixed;bottom:calc(var(--safe-bot)+24px);left:50%;transform:translateX(-50%) translateY(20px);background:rgba(20,20,20,.92);color:#fff;padding:10px 22px;border-radius:22px;font-size:13px;font-weight:600;opacity:0;transition:opacity .3s,transform .3s;white-space:nowrap;z-index:999;backdrop-filter:blur(8px)}
-    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TVS Ticket">
+<meta name="theme-color" content="#003B74">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>TVS Ticket Close</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --navy: #003B74;
+    --azzurro: #00A3E4;
+    --navy-light: #004d9a;
+    --surface: #f0f4f8;
+    --card: #ffffff;
+    --text: #0d1b2a;
+    --text-muted: #5a7082;
+    --border: #d1dce6;
+    --success: #00b86b;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --radius: 16px;
+    --shadow: 0 4px 24px rgba(0,59,116,0.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--surface);
+    color: var(--text);
+    min-height: 100vh;
+    overscroll-behavior: none;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--navy);
+    color: white;
+    padding: 16px 20px 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 2px 20px rgba(0,59,116,0.3);
+  }
+  .header-logo { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+  .header-logo span { color: var(--azzurro); }
+  .header-ticket {
+    margin-left: auto;
+    background: rgba(0,163,228,0.2);
+    border: 1px solid rgba(0,163,228,0.4);
+    color: var(--azzurro);
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+  }
+
+  /* ── PROGRESS BAR ── */
+  .progress-container {
+    background: var(--navy-light);
+    padding: 10px 20px 14px;
+    background: var(--navy);
+  }
+  .steps-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .step-dot {
+    flex: 1;
+    height: 4px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 2px;
+    transition: background 0.3s;
+  }
+  .step-dot.done { background: var(--azzurro); }
+  .step-dot.active { background: white; }
+  .step-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.7);
+    margin-top: 6px;
+    font-weight: 500;
+  }
+
+  /* ── SCREEN ── */
+  .screen { display: none; padding: 20px; max-width: 600px; margin: 0 auto; }
+  .screen.active { display: block; }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--navy);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title .icon {
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, var(--navy), var(--azzurro));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 14px; flex-shrink: 0;
+  }
+
+  /* ── FORM ── */
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+  input, select, textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 15px;
+    font-family: 'DM Sans', sans-serif;
+    background: white;
+    color: var(--text);
+    transition: border-color 0.2s;
+    margin-bottom: 14px;
+    -webkit-appearance: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--azzurro);
+    box-shadow: 0 0 0 3px rgba(0,163,228,0.12);
+  }
+  input.scan-input {
+    background: #f8fafc url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2300A3E4' stroke-width='2'%3E%3Cpath d='M3 5v2M3 11v2M3 17v2M7 3H5M13 3h-2M19 3h-2M21 7V5M21 13v-2M21 19v-2M7 21H5M13 21h-2M19 21h-2'/%3E%3Crect x='7' y='7' width='4' height='4'/%3E%3Crect x='13' y='7' width='4' height='4'/%3E%3Crect x='7' y='13' width='4' height='4'/%3E%3Crect x='13' y='13' width='4' height='4'/%3E%3C/svg%3E") no-repeat right 12px center;
+    padding-right: 40px;
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+  }
+  textarea { min-height: 80px; resize: vertical; }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* ── TOGGLE CHECKBOX ── */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .toggle-row:last-child { border-bottom: none; margin-bottom: 0; }
+  .toggle-label { font-size: 14px; font-weight: 500; }
+  .toggle-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .toggle {
+    width: 44px; height: 26px;
+    background: var(--border);
+    border-radius: 13px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+    border: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .toggle:checked { background: var(--azzurro); }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 20px; height: 20px;
+    background: white;
+    border-radius: 50%;
+    top: 3px; left: 3px;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  .toggle:checked::after { transform: translateX(18px); }
+
+  /* ── SCAN BUTTON ── */
+  .scan-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, var(--navy), #005abc);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 14px;
+    transition: transform 0.1s, box-shadow 0.1s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .scan-btn:active { transform: scale(0.97); }
+  .scan-btn.secondary {
+    background: transparent;
+    border: 1.5px solid var(--navy);
+    color: var(--navy);
+  }
+
+  /* ── BARCODE SCANNER OVERLAY ── */
+  #scanner-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 1000;
+    flex-direction: column;
+  }
+  #scanner-overlay.active { display: flex; }
+  #scanner-video { width: 100%; flex: 1; object-fit: cover; }
+  .scanner-ui {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .scanner-frame {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -60%);
+    width: 240px;
+    height: 160px;
+    border: 2px solid rgba(255,255,255,0.0);
+  }
+  .scanner-frame::before, .scanner-frame::after,
+  .scanner-frame > span::before, .scanner-frame > span::after {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-color: var(--azzurro);
+    border-style: solid;
+  }
+  .scanner-frame::before { top: 0; left: 0; border-width: 3px 0 0 3px; }
+  .scanner-frame::after { top: 0; right: 0; border-width: 3px 3px 0 0; }
+  .scanner-frame > span::before { bottom: 0; left: 0; border-width: 0 0 3px 3px; }
+  .scanner-frame > span::after { bottom: 0; right: 0; border-width: 0 3px 3px 0; }
+  .scanner-line {
+    position: absolute;
+    top: 50%;
+    left: 10%;
+    right: 10%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--azzurro), transparent);
+    animation: scan 2s ease-in-out infinite;
+    transform: translateY(-50%);
+  }
+  @keyframes scan {
+    0%, 100% { top: 20%; opacity: 1; }
+    50% { top: 80%; opacity: 0.7; }
+  }
+  .scanner-hint {
+    position: absolute;
+    bottom: 120px;
+    left: 0; right: 0;
+    text-align: center;
+    color: rgba(255,255,255,0.8);
+    font-size: 13px;
+    padding: 0 20px;
+  }
+  .scanner-bottom {
+    background: rgba(0,0,0,0.85);
+    padding: 20px;
+    pointer-events: all;
+  }
+  .scanner-target {
+    font-size: 12px;
+    color: var(--azzurro);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .scanner-close {
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 15px;
+    cursor: pointer;
+    width: 100%;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+  }
+
+  /* ── PHOTO SECTION ── */
+  .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .photo-thumb {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+  }
+  .photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .photo-thumb .del-photo {
+    position: absolute;
+    top: 4px; right: 4px;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 22px; height: 22px;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    line-height: 1;
+  }
+
+  /* ── PARTI LIST ── */
+  .parte-item {
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    border: 1px solid var(--border);
+  }
+  .parte-badge {
+    background: var(--navy);
+    color: white;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .parte-badge.doa { background: var(--warning); color: #1a1a1a; }
+  .parte-badge.pdv { background: var(--success); }
+  .parte-info { flex: 1; min-width: 0; }
+  .parte-code { font-weight: 600; font-size: 13px; font-family: 'DM Mono', monospace; }
+  .parte-serial { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .parte-del { background: none; border: none; color: var(--danger); font-size: 18px; cursor: pointer; padding: 2px; flex-shrink: 0; }
+
+  /* ── CODICE GUASTO ── */
+  .guasto-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .guasto-opt {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: white;
+    text-align: center;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s;
+  }
+  .guasto-opt.selected {
+    border-color: var(--azzurro);
+    background: rgba(0,163,228,0.08);
+    color: var(--navy);
+    font-weight: 700;
+  }
+
+  /* ── SOLUZIONE BUTTONS ── */
+  .sol-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .sol-btn {
+    padding: 14px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .sol-btn.pos.selected { background: #dcfce7; border-color: var(--success); color: #15803d; }
+  .sol-btn.neg.selected { background: #fee2e2; border-color: var(--danger); color: #dc2626; }
+
+  /* ── NAV BUTTONS ── */
+  .nav-row {
+    display: flex;
+    gap: 10px;
+    padding: 16px 20px;
+    background: white;
+    border-top: 1px solid var(--border);
+    position: sticky;
+    bottom: 0;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+  }
+  .btn {
+    padding: 14px 20px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.1s, box-shadow 0.1s;
+    font-family: 'DM Sans', sans-serif;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary {
+    flex: 1;
+    background: linear-gradient(135deg, var(--navy) 0%, #005abc 100%);
+    color: white;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(0,59,116,0.3);
+  }
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--navy);
+    border: 1.5px solid var(--border);
+  }
+  .btn-danger-outline {
+    background: white;
+    color: var(--danger);
+    border: 1.5px solid var(--danger);
+    flex: 1;
+    justify-content: center;
+  }
+  .btn-success {
+    flex: 1;
+    background: linear-gradient(135deg, #00916b, #00b86b);
+    color: white;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(0,184,107,0.3);
+    font-size: 16px;
+  }
+
+  /* ── SUMMARY ── */
+  .summary-section { margin-bottom: 20px; }
+  .summary-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-key { color: var(--text-muted); }
+  .summary-val { font-weight: 600; font-family: 'DM Mono', monospace; font-size: 13px; }
+
+  /* ── SUCCESS ── */
+  .success-screen { text-align: center; padding: 40px 20px; }
+  .success-icon { font-size: 64px; margin-bottom: 16px; }
+  .success-title { font-size: 24px; font-weight: 700; color: var(--navy); }
+  .success-sub { color: var(--text-muted); margin-top: 8px; font-size: 15px; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: var(--navy);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 2000;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.success-toast { background: var(--success); }
+  .toast.error-toast { background: var(--danger); }
+
+  /* ── SCROLLABLE CONTENT ── */
+  .scroll-content {
+    padding-bottom: 100px;
+  }
+
+  /* READONLY DISPLAY */
+  .field-display {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 14px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 14px;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    background: rgba(0,163,228,0.15);
+    color: var(--navy);
+    margin-left: 4px;
+  }
+
+  .info-banner {
+    background: rgba(0,163,228,0.08);
+    border: 1px solid rgba(0,163,228,0.3);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--navy);
+    margin-bottom: 14px;
+    display: flex;
+    gap: 8px;
+  }
+</style>
 </head>
 <body>
-<div id="splash">
-  <div class="bg-shapes"><div class="shape s1"></div><div class="shape s2"></div><div class="grid-bg"></div></div>
-  <div class="sp-content">
-    <div class="arc-wrap"><div class="arc-bg"><img class="sp-logo" src="https://cms.tvs-servizi.com/Sisal/images/tvs_scs_rico.png" onerror="this.style.display='none'" alt="TVS"></div></div>
-    <div class="sp-label"><div class="sp-title">Sisal Gaming · CMS</div><div class="sp-tag">Believe in the Power of Us®</div></div>
-  </div>
-  <div class="sp-dots"><div class="sdot"></div><div class="sdot"></div><div class="sdot"></div></div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-logo">TVS <span>Ticket</span></div>
+  <div id="header-ticket" class="header-ticket" style="display:none"></div>
 </div>
 
-<div id="app">
-  <div class="app-header">
-    <div class="hdr-arc"></div>
-    <div class="hdr-top">
-      <img class="hdr-logo" src="https://cms.tvs-servizi.com/Sisal/images/tvs_scs_rico.png" onerror="this.style.display='none'" alt="TVS">
-      <div class="hdr-clock" id="clockEl"></div>
-    </div>
-    <div class="hdr-greet" id="greetEl">Buongiorno</div>
-    <div class="hdr-sub">Gestione Ticket · Territorio</div>
+<!-- PROGRESS -->
+<div class="progress-container" id="progress-bar" style="display:none">
+  <div class="steps-row">
+    <div class="step-dot" id="dot-0"></div>
+    <div class="step-dot" id="dot-1"></div>
+    <div class="step-dot" id="dot-2"></div>
+    <div class="step-dot" id="dot-3"></div>
+    <div class="step-dot" id="dot-4"></div>
   </div>
-  <div class="app-body">
-    <div class="portali-row">
-      <button class="portale-btn portale-normale" onclick="apri('normale')">
-        <div class="pb-badge">ADMIN</div>
-        <div class="pb-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
-        <div><div class="pb-title">Portale Normale</div><div class="pb-sub">Accesso standard</div></div>
-      </button>
-      <button class="portale-btn portale-tecnico" onclick="apri('tecnico')">
-        <div class="pb-badge">TECNICO</div>
-        <div class="pb-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
-        <div><div class="pb-title">Portale Tecnico</div><div class="pb-sub">Accesso tecnici</div></div>
-      </button>
-    </div>
-
-    <div class="form-card">
-      <div class="form-header">
-        <div class="form-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue-main)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Chiusura Ticket</div>
-        <button class="clear-btn" onclick="clearAll()">✕ Pulisci</button>
-      </div>
-      <div class="form-section-label">📋 Dati Ticket</div>
-      <div class="field-group">
-        <div class="field-label" id="lbl-ticket"><div class="dot"></div>Numero Ticket</div>
-        <div class="field-row">
-          <input class="field-input" id="f-ticket" type="text" placeholder="Es. CAS-7416094-H5S7L1" oninput="checkFilled('f-ticket','lbl-ticket')">
-          <button class="cam-btn" onclick="openCamera('ticket')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
-        </div>
-      </div>
-      <div class="form-divider"></div>
-      <div class="form-section-label">🔧 Seriali Parti</div>
-      <div class="field-group">
-        <div class="field-label" id="lbl-asset"><div class="dot"></div>Serial Asset</div>
-        <div class="field-row">
-          <input class="field-input" id="f-asset" type="text" placeholder="Seriale asset" oninput="checkFilled('f-asset','lbl-asset')">
-          <button class="cam-btn" onclick="openCamera('asset')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
-        </div>
-      </div>
-      <div class="field-group">
-        <div class="field-label" id="lbl-parte-inst"><div class="dot"></div>Serial Parte Installata</div>
-        <div class="field-row">
-          <input class="field-input" id="f-parte-inst" type="text" placeholder="Seriale parte installata" oninput="checkFilled('f-parte-inst','lbl-parte-inst')">
-          <button class="cam-btn" onclick="openCamera('parte-inst')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
-        </div>
-      </div>
-      <div class="field-group">
-        <div class="field-label" id="lbl-parte-guasta"><div class="dot"></div>Serial Parte Guasta / DOA</div>
-        <div class="field-row">
-          <input class="field-input" id="f-parte-guasta" type="text" placeholder="Seriale parte guasta" oninput="checkFilled('f-parte-guasta','lbl-parte-guasta')">
-          <button class="cam-btn" onclick="openCamera('parte-guasta')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
-        </div>
-      </div>
-      <div class="field-group">
-        <div class="field-label" id="lbl-stag"><div class="dot"></div>Service Tag</div>
-        <div class="field-row">
-          <input class="field-input" id="f-stag" type="text" placeholder="Service tag" oninput="checkFilled('f-stag','lbl-stag')">
-          <button class="cam-btn" onclick="openCamera('stag')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
-        </div>
-      </div>
-      <div class="submit-row">
-        <button class="submit-btn submit-normale" onclick="apriConDati('normale')">▶ Portale Admin</button>
-        <button class="submit-btn submit-tecnico" onclick="apriConDati('tecnico')">▶ Portale Tecnico</button>
-      </div>
-    </div>
-
-    <div class="install-card" id="installCard">
-      <div class="install-emoji">📲</div>
-      <div><strong>Aggiungi alla schermata Home</strong><span>Tocca <b>Condividi ⬆️</b> in Safari → <b>"Aggiungi a schermata Home"</b></span></div>
-    </div>
-    <div class="app-footer">TVS Supply Chain Solutions · Sisal Gaming · Believe in the Power of Us®</div>
-  </div>
+  <div class="step-label" id="step-label"></div>
 </div>
 
-<div id="cameraModal">
-  <video id="cameraVideo" autoplay playsinline muted></video>
-  <canvas id="cameraCanvas"></canvas>
-  <div class="cam-header">
-    <button class="cam-back" onclick="closeCamera()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
-    <div><div class="cam-title-txt" id="camTitle">Scansiona</div><div class="cam-sub-txt">Inquadra il codice nel riquadro</div></div>
-  </div>
-  <div class="cam-overlay"><div class="ocr-frame"><div class="oc tl"></div><div class="oc tr"></div><div class="oc bl"></div><div class="oc br"></div><div class="ocr-laser"></div></div></div>
-  <div class="cam-footer">
-    <div class="cam-hint-txt">Avvicina · buona luce · tieni fermo · poi scatta</div>
-    <div class="shutter" onclick="captureAndOCR()"><div class="shutter-inner"></div></div>
-  </div>
-</div>
-
-<div id="ocrLoading">
-  <div class="ocr-spinner"></div>
-  <div class="ocr-load-title">Lettura OCR…</div>
-  <div class="ocr-load-sub">Riconoscimento testo in corso</div>
-  <div class="ocr-prog"><div class="ocr-prog-bar" id="ocrBar"></div></div>
-</div>
-
-<div id="resultSheet">
-  <div class="rs-body">
-    <div class="rs-handle"></div>
-    <div class="rs-icon-wrap"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-    <div class="rs-title">Testo Rilevato</div>
-    <div class="rs-sub" id="rsSub">Verifica e conferma il codice</div>
-    <div class="rs-val-box"><div class="rs-val-label" id="rsLabel">Campo</div><div class="rs-val-code" id="rsValue">—</div><button class="copy-mini" onclick="copiaValore()">COPIA</button></div>
-    <div class="rs-raw-box"><div class="rs-raw-label">Testo grezzo OCR</div><div class="rs-raw-txt" id="rsRaw"></div></div>
-    <div class="rs-actions">
-      <button class="rs-confirm" onclick="confirmOCR()">✓ Usa questo codice</button>
-      <button class="rs-retry" onclick="retryOCR()">↺ Riprova</button>
-    </div>
-  </div>
-</div>
-
+<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
+<!-- SCANNER OVERLAY -->
+<div id="scanner-overlay">
+  <video id="scanner-video" autoplay playsinline muted></video>
+  <div class="scanner-ui">
+    <div class="scanner-frame"><span></span></div>
+    <div class="scanner-line"></div>
+    <div class="scanner-hint">Inquadra il barcode o QR code</div>
+  </div>
+  <div class="scanner-bottom">
+    <div class="scanner-target" id="scanner-target-label">SCANSIONE IN CORSO</div>
+    <button class="scanner-close" style="background:var(--azzurro);color:#001b33;border:none;margin-bottom:10px;font-weight:700;" onclick="manualEntry()">⌨ Inserimento manuale</button>
+    <button class="scanner-close" onclick="closeScanner()">✕ Annulla scansione</button>
+  </div>
+</div>
+
+<!-- ======= SCREEN 0: LOGIN ======= -->
+<div class="screen active" id="screen-0">
+  <div style="padding: 40px 20px 20px; text-align:center;">
+    <div style="width:72px;height:72px;background:linear-gradient(135deg,var(--navy),var(--azzurro));border-radius:20px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:36px;box-shadow:0 8px 32px rgba(0,59,116,0.3);">🎰</div>
+    <div style="font-size:22px;font-weight:700;color:var(--navy);">Chiusura Ticket</div>
+    <div style="font-size:14px;color:var(--text-muted);margin-top:6px;">Portale Tecnici TVS SCS · <b style="color:var(--azzurro)">v3.0 ZXing</b></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><div class="icon">🔑</div>Accesso</div>
+    <label>Numero Ticket</label>
+    <input type="text" id="login-ticket" class="scan-input" placeholder="es. TK-2025-XXXXX" inputmode="text" autocomplete="off">
+    <label>Username</label>
+    <input type="text" id="login-user" placeholder="Matricola / Username" autocomplete="username">
+    <label>Password</label>
+    <input type="password" id="login-pass" placeholder="Password portale" autocomplete="current-password">
+  </div>
+  <div style="padding: 0 0 20px;">
+    <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="doLogin()">Accedi →</button>
+  </div>
+</div>
+
+<!-- ======= SCREEN 1: INFO TICKET ======= -->
+<div class="screen" id="screen-1">
+  <div class="scroll-content">
+    <div class="card">
+      <div class="card-title"><div class="icon">📋</div>Informazioni Ticket</div>
+      <div class="summary-row"><span class="summary-key">Ticket</span><span class="summary-val" id="s1-ticket"></span></div>
+      <div class="summary-row"><span class="summary-key">Tecnico</span><span class="summary-val" id="s1-user"></span></div>
+      <div class="summary-row"><span class="summary-key">Data / Ora</span><span class="summary-val" id="s1-datetime"></span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="icon">🏪</div>Punto Vendita</div>
+      <label>Codice RICE / PdV</label>
+      <input type="text" id="pdv-rice" class="scan-input" placeholder="Codice RICE" inputmode="text">
+      <button class="scan-btn secondary" onclick="startScan('pdv-rice','CODICE RICE / BARCODE PdV')">⬛ Scansiona barcode PdV</button>
+      <label>Descrizione PdV</label>
+      <input type="text" id="pdv-desc" placeholder="Nome punto vendita" autocomplete="off">
+      <div class="field-row">
+        <div>
+          <label>Comune</label>
+          <input type="text" id="pdv-comune" placeholder="Comune">
+        </div>
+        <div>
+          <label>Provincia</label>
+          <input type="text" id="pdv-prov" placeholder="es. MI" maxlength="2" style="text-transform:uppercase">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="icon">🎰</div>Terminale / Asset</div>
+      <label>Asset Code</label>
+      <input type="text" id="asset-code" class="scan-input" placeholder="Codice asset" inputmode="text" style="font-family:'DM Mono',monospace">
+      <button class="scan-btn secondary" onclick="startScan('asset-code','ASSET CODE')">⬛ Scansiona barcode Asset</button>
+      <label>Serial Number Terminale</label>
+      <input type="text" id="asset-serial" class="scan-input" placeholder="Serial number terminale" inputmode="text" style="font-family:'DM Mono',monospace">
+      <button class="scan-btn secondary" onclick="startScan('asset-serial','SERIAL NUMBER TERMINALE')">⬛ Scansiona serial terminale</button>
+      <label>Tipo Terminale</label>
+      <select id="asset-type">
+        <option value="">Seleziona tipo...</option>
+        <option>AWP</option>
+        <option>VLT</option>
+        <option>LOT</option>
+        <option>BET</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="icon">👥</div>Opzioni</div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Intervento Congiunto</div>
+          <div class="toggle-sub">Presente un secondo tecnico</div>
+        </div>
+        <input type="checkbox" class="toggle" id="flag-congiunto" onchange="toggleCongiunto()">
+      </div>
+      <div id="congiunto-extra" style="display:none;margin-top:8px;">
+        <label>Matricola 2° Tecnico</label>
+        <input type="text" id="tecnico2" placeholder="Username 2° tecnico">
+      </div>
+    </div>
+  </div>
+  <div class="nav-row">
+    <button class="btn btn-danger-outline" onclick="interventoParziale()">⏸ Parziale</button>
+    <button class="btn btn-primary" onclick="goTo(2)">Avanti →</button>
+  </div>
+</div>
+
+<!-- ======= SCREEN 2: SOLUZIONE ======= -->
+<div class="screen" id="screen-2">
+  <div class="scroll-content">
+    <div class="card">
+      <div class="card-title"><div class="icon">🔧</div>Dettagli Soluzione</div>
+      <label>Esito Intervento</label>
+      <div class="sol-row">
+        <button class="sol-btn pos" id="sol-pos" onclick="setSoluzione('P')">✅ Positivo</button>
+        <button class="sol-btn neg" id="sol-neg" onclick="setSoluzione('N')">❌ Negativo</button>
+      </div>
+      <div id="contestuale-row" class="toggle-row">
+        <div>
+          <div class="toggle-label">Contestuale</div>
+          <div class="toggle-sub">Risolto contestualmente</div>
+        </div>
+        <input type="checkbox" class="toggle" id="flag-contestuale">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="icon">⚠️</div>Codice Guasto</div>
+      <div id="guasto-grid" class="guasto-grid">
+        <div class="guasto-opt" onclick="selectGuasto(this,'ALI')">ALI – Alimentazione</div>
+        <div class="guasto-opt" onclick="selectGuasto(this,'SCH')">SCH – Scheda</div>
+        <div class="guasto-opt" onclick="selectGuasto(this,'VID')">VID – Video/Display</div>
+        <div class="guasto-opt" onclick="selectGuasto(this,'MDB')">MDB – Gettoniera</div>
+        <div class="guasto-opt" onclick="selectGuasto(this,'PRI')">PRI – Printer</div>
+        <div class="guasto-opt" onclick="selectGuasto(this,'SCN')">SCN – Scanner</div>
+        <div class="guasto-opt" onclick="selectGuasto(this,'NET')">NET – Rete</div>
+        <div class="guasto-opt" onclick="selectGuasto(this,'SFW')">SFW – Software</div>
+        <div class="guasto-opt" onclick="selectGuasto(this,'MEC')">MEC – Meccanica</div>
+        <div class="guasto-opt" onclick="selectGuasto(this,'VLT')">VLT – Varie</div>
+      </div>
+      <label>Codice guasto manuale (opzionale)</label>
+      <input type="text" id="guasto-custom" placeholder="Codice personalizzato" style="font-family:'DM Mono',monospace">
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="icon">📝</div>Note Intervento</div>
+      <textarea id="note-intervento" placeholder="Descrizione dettagliata delle attività svolte, anomalie riscontrate, stato finale del terminale..."></textarea>
+    </div>
+  </div>
+  <div class="nav-row">
+    <button class="btn btn-secondary" onclick="goTo(1)">← Indietro</button>
+    <button class="btn btn-danger-outline" onclick="interventoParziale()">⏸</button>
+    <button class="btn btn-primary" onclick="goTo(3)">Avanti →</button>
+  </div>
+</div>
+
+<!-- ======= SCREEN 3: PARTI UTILIZZATE ======= -->
+<div class="screen" id="screen-3">
+  <div class="scroll-content">
+    <div class="info-banner">ℹ️ Aggiungi tutte le parti installate e ritirate durante l'intervento.</div>
+
+    <!-- FORM INSERIMENTO PARTE -->
+    <div class="card">
+      <div class="card-title"><div class="icon">🔩</div>Aggiungi Parte</div>
+
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Giacenza PdV</div>
+          <div class="toggle-sub">Parte disponibile presso il PdV Sisal</div>
+        </div>
+        <input type="checkbox" class="toggle" id="flag-pdv">
+      </div>
+
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Parte DOA</div>
+          <div class="toggle-sub">Dead On Arrival – parte difettosa</div>
+        </div>
+        <input type="checkbox" class="toggle" id="flag-doa" onchange="toggleDOA()">
+      </div>
+
+      <div id="doa-cluster-row" style="display:none;margin-top:8px;margin-bottom:8px;">
+        <label>Cluster DOA</label>
+        <select id="doa-cluster">
+          <option value="">Seleziona cluster...</option>
+          <option>Cluster A</option>
+          <option>Cluster B</option>
+          <option>Cluster C</option>
+          <option>Cluster D</option>
+        </select>
+      </div>
+
+      <label>▲ Parte Installata – Codice</label>
+      <input type="text" id="parte-in-code" class="scan-input" placeholder="Codice parte installata" style="font-family:'DM Mono',monospace">
+      <button class="scan-btn secondary" onclick="startScan('parte-in-code','BARCODE PARTE INSTALLATA')">⬛ Scansiona codice parte installata</button>
+
+      <label>▲ Parte Installata – Serial Number</label>
+      <input type="text" id="parte-in-serial" class="scan-input" placeholder="S/N parte installata" style="font-family:'DM Mono',monospace">
+      <button class="scan-btn secondary" onclick="startScan('parte-in-serial','S/N PARTE INSTALLATA')">⬛ Scansiona S/N installata</button>
+
+      <label>▼ Parte Ritirata – Codice</label>
+      <input type="text" id="parte-out-code" class="scan-input" placeholder="Codice parte ritirata" style="font-family:'DM Mono',monospace">
+      <button class="scan-btn secondary" onclick="startScan('parte-out-code','BARCODE PARTE RITIRATA')">⬛ Scansiona codice parte ritirata</button>
+
+      <label>▼ Parte Ritirata – Serial Number</label>
+      <input type="text" id="parte-out-serial" class="scan-input" placeholder="S/N parte ritirata" style="font-family:'DM Mono',monospace">
+      <button class="scan-btn secondary" onclick="startScan('parte-out-serial','S/N PARTE RITIRATA')">⬛ Scansiona S/N ritirata</button>
+
+      <label>Difetto Riscontrato</label>
+      <select id="difetto">
+        <option value="">Seleziona difetto...</option>
+        <option>Guasto elettrico</option>
+        <option>Guasto meccanico</option>
+        <option>Rottura fisica</option>
+        <option>Malfunzionamento software</option>
+        <option>Usura normale</option>
+        <option>DOA (difettosa all'arrivo)</option>
+        <option>N/D – Solo ritiro</option>
+      </select>
+
+      <div id="service-tag-row">
+        <label>ServiceTag (etichetta adesiva)</label>
+        <input type="text" id="service-tag" class="scan-input" placeholder="Codice ServiceTag" style="font-family:'DM Mono',monospace">
+        <button class="scan-btn secondary" onclick="startScan('service-tag','SERVICE TAG')">⬛ Scansiona ServiceTag</button>
+      </div>
+
+      <label>Descrizione Guasto</label>
+      <textarea id="desc-guasto" placeholder="Breve descrizione del guasto riscontrato..." style="min-height:60px;"></textarea>
+
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px;" onclick="inserisciParte()">+ Inserisci Parte</button>
+    </div>
+
+    <!-- LISTA PARTI -->
+    <div class="card">
+      <div class="card-title"><div class="icon">📦</div>Lista Parti <span class="badge" id="parti-count">0</span></div>
+      <div id="parti-list"><div style="color:var(--text-muted);font-size:14px;text-align:center;padding:12px 0;">Nessuna parte inserita</div></div>
+    </div>
+
+    <!-- UPLOAD FOTO -->
+    <div class="card">
+      <div class="card-title"><div class="icon">📸</div>Foto Materiali</div>
+      <div class="photo-grid" id="photo-grid"></div>
+      <button class="scan-btn" onclick="document.getElementById('photo-input').click()">📷 Scatta / Carica Foto</button>
+      <input type="file" id="photo-input" accept="image/*" capture="environment" multiple style="display:none" onchange="addPhotos(event)">
+    </div>
+
+    <!-- UPLOAD VERBALE -->
+    <div class="card">
+      <div class="card-title"><div class="icon">📄</div>Carica Verbale</div>
+      <div id="verbale-list" style="margin-bottom:10px;"></div>
+      <button class="scan-btn secondary" onclick="document.getElementById('verbale-input').click()">📎 Allega Verbale (max 2 file)</button>
+      <input type="file" id="verbale-input" accept=".pdf,.jpg,.jpeg,.png" multiple style="display:none" onchange="addVerbale(event)">
+    </div>
+  </div>
+  <div class="nav-row">
+    <button class="btn btn-secondary" onclick="goTo(2)">← Indietro</button>
+    <button class="btn btn-danger-outline" onclick="interventoParziale()">⏸</button>
+    <button class="btn btn-primary" onclick="goTo(4)">Riepilogo →</button>
+  </div>
+</div>
+
+<!-- ======= SCREEN 4: RIEPILOGO ======= -->
+<div class="screen" id="screen-4">
+  <div class="scroll-content">
+    <div class="card">
+      <div class="card-title"><div class="icon">✅</div>Riepilogo Ticket</div>
+      <div id="summary-content"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="icon">📤</div>Modalità Invio</div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Condividi report + foto</div>
+          <div class="toggle-sub">Apre condivisione nativa (email/WhatsApp) con foto allegate</div>
+        </div>
+        <input type="checkbox" class="toggle" id="send-email" checked>
+      </div>
+      <div id="email-dest-row">
+        <label>Destinatario Email</label>
+        <input type="email" id="email-dest" value="backoffice@tvs-scs.it" placeholder="email@tvs-scs.it">
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Chiamata API portale</div>
+          <div class="toggle-sub">Aggiornamento diretto sul CMS</div>
+        </div>
+        <input type="checkbox" class="toggle" id="send-api">
+      </div>
+      <div id="api-config-row" style="display:none;">
+        <label>Endpoint API</label>
+        <input type="text" id="api-endpoint" placeholder="https://portale.tvs/api/close-ticket" style="font-family:'DM Mono',monospace;font-size:13px;">
+        <label>API Key / Token</label>
+        <input type="text" id="api-token" placeholder="Bearer token o API key">
+      </div>
+    </div>
+
+    <div class="info-banner">⚠️ Verifica tutti i dati prima di chiudere il ticket. Questa operazione non è reversibile.</div>
+  </div>
+  <div class="nav-row">
+    <button class="btn btn-secondary" onclick="goTo(3)">← Indietro</button>
+    <button class="btn btn-success" onclick="chiudiTicket()">🔒 Chiudi Ticket</button>
+  </div>
+</div>
+
+<!-- ======= SCREEN 5: COMPLETATO ======= -->
+<div class="screen" id="screen-5">
+  <div class="success-screen">
+    <div class="success-icon">🎯</div>
+    <div class="success-title">Ticket Chiuso!</div>
+    <div class="success-sub" id="success-msg">I dati sono stati inviati correttamente</div>
+    <div style="margin-top:32px;" id="email-preview-container"></div>
+    <button class="btn btn-primary" style="margin-top:24px;width:100%;justify-content:center;" onclick="nuovoTicket()">+ Nuovo Ticket</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
 <script>
-const PORTALI={normale:'https://cms.tvs-servizi.com/Sisal/log_in.aspx',tecnico:'https://cms.tvs-servizi.com/Sisal/login.aspx'};
-const FIELDS={'ticket':{label:'Numero Ticket',id:'f-ticket',lbl:'lbl-ticket'},'asset':{label:'Serial Asset',id:'f-asset',lbl:'lbl-asset'},'parte-inst':{label:'Serial Parte Installata',id:'f-parte-inst',lbl:'lbl-parte-inst'},'parte-guasta':{label:'Serial Parte Guasta',id:'f-parte-guasta',lbl:'lbl-parte-guasta'},'stag':{label:'Service Tag',id:'f-stag',lbl:'lbl-stag'}};
-let currentField=null,currentValue='',videoStream=null;
-function tick(){const n=new Date();document.getElementById('clockEl').textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');const h=n.getHours();document.getElementById('greetEl').textContent=h<5?'Buonanotte':h<12?'Buongiorno':h<18?'Buon pomeriggio':'Buonasera';}
-tick();setInterval(tick,30000);
-setTimeout(()=>{document.getElementById('splash').classList.add('out');setTimeout(()=>{document.getElementById('splash').style.display='none';document.getElementById('app').classList.add('in');},700);},2800);
-const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase());
-if(!isIOS||window.navigator.standalone)document.getElementById('installCard').classList.add('hidden');
-function apri(tipo){window.location.href=PORTALI[tipo];}
-function apriConDati(tipo){const t=document.getElementById('f-ticket').value.trim();if(t){navigator.clipboard.writeText(t).catch(()=>{});showToast('📋 Numero ticket copiato!');}setTimeout(()=>{window.location.href=PORTALI[tipo];},900);}
-function checkFilled(iId,lId){const v=document.getElementById(iId).value.trim();document.getElementById(iId).classList.toggle('filled',!!v);document.getElementById(lId).classList.toggle('filled',!!v);}
-function clearAll(){Object.values(FIELDS).forEach(f=>{document.getElementById(f.id).value='';checkFilled(f.id,f.lbl);});showToast('🗑 Campi puliti');}
-function openCamera(field){currentField=field;document.getElementById('camTitle').textContent='Scansiona: '+FIELDS[field].label;document.getElementById('cameraModal').classList.add('open');startCamera();}
-async function startCamera(){try{videoStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}}});document.getElementById('cameraVideo').srcObject=videoStream;}catch(e){showToast('⚠️ Permesso telecamera negato');closeCamera();}}
-function closeCamera(){if(videoStream){videoStream.getTracks().forEach(t=>t.stop());videoStream=null;}document.getElementById('cameraVideo').srcObject=null;document.getElementById('cameraModal').classList.remove('open');}
-async function captureAndOCR(){const video=document.getElementById('cameraVideo'),canvas=document.getElementById('cameraCanvas');canvas.width=video.videoWidth;canvas.height=video.videoHeight;const ctx=canvas.getContext('2d');ctx.drawImage(video,0,0);const img=ctx.getImageData(0,0,canvas.width,canvas.height),d=img.data;for(let i=0;i<d.length;i+=4){const g=d[i]*.299+d[i+1]*.587+d[i+2]*.114,v=g>128?Math.min(255,g*1.4):Math.max(0,g*.6);d[i]=d[i+1]=d[i+2]=v;}ctx.putImageData(img,0,0);closeCamera();document.getElementById('ocrLoading').classList.add('open');try{const result=await Tesseract.recognize(canvas,'eng',{logger:m=>{if(m.status==='recognizing text')document.getElementById('ocrBar').style.width=(m.progress*100)+'%';}});document.getElementById('ocrLoading').classList.remove('open');showResult(result.data.text);}catch(e){document.getElementById('ocrLoading').classList.remove('open');showToast('⚠️ OCR fallito — riprova con più luce');}}
-function parseOCR(raw,field){const text=raw.replace(/\n/g,' ').replace(/\s+/g,' ').trim();if(field==='ticket'){const m=text.match(/\b([A-Z]{2,5}[-_]?\d{5,10}[-_]?[A-Z0-9]{3,10})\b/i);if(m)return m[1].toUpperCase();}const tokens=text.match(/\b([A-Z0-9]{6,25})\b/gi)||[];const best=tokens.map(t=>t.toUpperCase()).filter(t=>/[A-Z]/.test(t)&&/[0-9]/.test(t)).sort((a,b)=>b.length-a.length);return best[0]||'';}
-function showResult(rawText){const extracted=parseOCR(rawText,currentField);currentValue=extracted;const info=FIELDS[currentField];document.getElementById('rsLabel').textContent=info.label;document.getElementById('rsValue').textContent=extracted||'—';document.getElementById('rsSub').textContent=extracted?'Controlla e premi "Usa questo"':'Testo non riconosciuto — riprova';document.getElementById('rsRaw').textContent=rawText.trim().slice(0,400);document.getElementById('resultSheet').classList.add('open');}
-function confirmOCR(){if(!currentValue||currentValue==='—'){showToast('⚠️ Nessun codice — riprova');return;}const info=FIELDS[currentField];document.getElementById(info.id).value=currentValue;checkFilled(info.id,info.lbl);document.getElementById('resultSheet').classList.remove('open');showToast('✅ '+info.label+' compilato!');}
-function retryOCR(){document.getElementById('resultSheet').classList.remove('open');setTimeout(()=>openCamera(currentField),400);}
-function copiaValore(){if(currentValue)navigator.clipboard.writeText(currentValue).then(()=>showToast('✅ Copiato!')).catch(()=>showToast('⚠️ Copia non riuscita'));}
-function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  ticket: '', user: '', datetime: '',
+  pdvRice: '', pdvDesc: '', pdvComune: '', pdvProv: '',
+  assetCode: '', assetSerial: '', assetType: '',
+  flagCongiunto: false, tecnico2: '',
+  soluzione: '', flagContestuale: false,
+  codiceGuasto: '', noteIntervento: '',
+  parti: [],
+  photos: [], // base64
+  verbali: [], // {name, data}
+  currentScreen: 0
+};
+
+const STEPS = ['Login','Info Ticket','Soluzione','Parti','Riepilogo'];
+
+// ============================================================
+// SCAN ENGINE (ZXing — funziona su iOS Safari + Android, tutti i formati)
+// ============================================================
+let zxingReader = null;
+let scanTarget = null;
+let scanActive = false;
+
+async function startScan(fieldId, label) {
+  scanTarget = fieldId;
+  document.getElementById('scanner-target-label').textContent = label;
+  const overlay = document.getElementById('scanner-overlay');
+  overlay.classList.add('active');
+  scanActive = true;
+
+  if (typeof ZXing === 'undefined') {
+    showToast('Libreria scanner non caricata', 'error');
+    manualEntry();
+    return;
+  }
+
+  try {
+    // Hints: leggi TUTTI i formati (1D + 2D)
+    const hints = new Map();
+    const formats = [
+      ZXing.BarcodeFormat.CODE_128, ZXing.BarcodeFormat.CODE_39,
+      ZXing.BarcodeFormat.CODE_93, ZXing.BarcodeFormat.CODABAR,
+      ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.EAN_8,
+      ZXing.BarcodeFormat.UPC_A, ZXing.BarcodeFormat.UPC_E,
+      ZXing.BarcodeFormat.ITF, ZXing.BarcodeFormat.QR_CODE,
+      ZXing.BarcodeFormat.DATA_MATRIX, ZXing.BarcodeFormat.AZTEC,
+      ZXing.BarcodeFormat.PDF_417, ZXing.BarcodeFormat.RSS_14,
+      ZXing.BarcodeFormat.MAXICODE
+    ];
+    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
+    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+
+    zxingReader = new ZXing.BrowserMultiFormatReader(hints, 300);
+
+    // Seleziona camera posteriore se disponibile
+    let deviceId = undefined;
+    try {
+      const devices = await zxingReader.listVideoInputDevices();
+      const back = devices.find(d => /back|rear|environment|posteriore/i.test(d.label));
+      deviceId = back ? back.deviceId : (devices.length ? devices[devices.length - 1].deviceId : undefined);
+    } catch(e) {}
+
+    zxingReader.decodeFromVideoDevice(deviceId, 'scanner-video', (result, err) => {
+      if (result && scanActive) {
+        if (navigator.vibrate) navigator.vibrate(120);
+        onScanResult(result.getText());
+      }
+    });
+  } catch(e) {
+    showToast('Fotocamera non disponibile: ' + e.message, 'error');
+    manualEntry();
+  }
+}
+
+function manualEntry() {
+  const val = prompt('Inserisci il codice manualmente:');
+  if (val && val.trim()) onScanResult(val.trim());
+  else closeScanner();
+}
+
+function onScanResult(val) {
+  closeScanner();
+  if (scanTarget) {
+    const field = document.getElementById(scanTarget);
+    if (field) { field.value = val; field.dispatchEvent(new Event('input')); }
+    showToast('✓ ' + val.substring(0,30), 'success');
+  }
+}
+
+function closeScanner() {
+  scanActive = false;
+  if (zxingReader) {
+    try { zxingReader.reset(); } catch(e) {}
+    zxingReader = null;
+  }
+  document.getElementById('scanner-overlay').classList.remove('active');
+  const v = document.getElementById('scanner-video');
+  if (v.srcObject) { v.srcObject.getTracks().forEach(t => t.stop()); v.srcObject = null; }
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function goTo(n) {
+  if (n === 4) buildSummary();
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + n).classList.add('active');
+  state.currentScreen = n;
+  updateProgress(n);
+  window.scrollTo(0, 0);
+}
+
+function updateProgress(n) {
+  const bar = document.getElementById('progress-bar');
+  const ht = document.getElementById('header-ticket');
+  if (n === 0) { bar.style.display = 'none'; ht.style.display = 'none'; return; }
+  bar.style.display = 'block';
+  ht.style.display = 'block';
+  ht.textContent = state.ticket;
+  for (let i = 0; i < 5; i++) {
+    const dot = document.getElementById('dot-' + i);
+    dot.className = 'step-dot' + (i < n ? ' done' : i === n ? ' active' : '');
+  }
+  document.getElementById('step-label').textContent = STEPS[n] || '';
+}
+
+// ============================================================
+// LOGIN
+// ============================================================
+function doLogin() {
+  const t = document.getElementById('login-ticket').value.trim();
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value.trim();
+  if (!t || !u || !p) { showToast('Compila tutti i campi', 'error'); return; }
+  state.ticket = t;
+  state.user = u;
+  state.datetime = new Date().toLocaleString('it-IT');
+  document.getElementById('s1-ticket').textContent = t;
+  document.getElementById('s1-user').textContent = u;
+  document.getElementById('s1-datetime').textContent = state.datetime;
+  goTo(1);
+}
+
+// ============================================================
+// CONGIUNTO
+// ============================================================
+function toggleCongiunto() {
+  const checked = document.getElementById('flag-congiunto').checked;
+  document.getElementById('congiunto-extra').style.display = checked ? 'block' : 'none';
+}
+
+// ============================================================
+// SOLUZIONE
+// ============================================================
+function setSoluzione(v) {
+  state.soluzione = v;
+  document.getElementById('sol-pos').classList.toggle('selected', v === 'P');
+  document.getElementById('sol-neg').classList.toggle('selected', v === 'N');
+}
+
+function selectGuasto(el, code) {
+  document.querySelectorAll('.guasto-opt').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  state.codiceGuasto = code;
+}
+
+// ============================================================
+// PARTI
+// ============================================================
+function toggleDOA() {
+  const doa = document.getElementById('flag-doa').checked;
+  document.getElementById('doa-cluster-row').style.display = doa ? 'block' : 'none';
+  if (doa) {
+    const inCode = document.getElementById('parte-in-code').value;
+    document.getElementById('parte-out-code').value = inCode;
+    document.getElementById('parte-in-serial').addEventListener('input', function() {
+      document.getElementById('parte-out-serial').value = this.value;
+    }, {once: false});
+  }
+}
+
+function inserisciParte() {
+  const inCode = document.getElementById('parte-in-code').value.trim();
+  const inSn = document.getElementById('parte-in-serial').value.trim();
+  const outCode = document.getElementById('parte-out-code').value.trim();
+  const outSn = document.getElementById('parte-out-serial').value.trim();
+  if (!inCode) { showToast('Inserisci il codice parte installata', 'error'); return; }
+  const parte = {
+    inCode, inSn, outCode, outSn,
+    doa: document.getElementById('flag-doa').checked,
+    pdv: document.getElementById('flag-pdv').checked,
+    doaCluster: document.getElementById('doa-cluster').value,
+    difetto: document.getElementById('difetto').value,
+    serviceTag: document.getElementById('service-tag').value.trim(),
+    descGuasto: document.getElementById('desc-guasto').value.trim()
+  };
+  state.parti.push(parte);
+  renderParti();
+  // reset form
+  ['parte-in-code','parte-in-serial','parte-out-code','parte-out-serial','service-tag','desc-guasto'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('flag-doa').checked = false;
+  document.getElementById('flag-pdv').checked = false;
+  document.getElementById('difetto').value = '';
+  document.getElementById('doa-cluster-row').style.display = 'none';
+  showToast('Parte aggiunta', 'success');
+}
+
+function renderParti() {
+  const list = document.getElementById('parti-list');
+  document.getElementById('parti-count').textContent = state.parti.length;
+  if (!state.parti.length) { list.innerHTML = '<div style="color:var(--text-muted);font-size:14px;text-align:center;padding:12px 0;">Nessuna parte inserita</div>'; return; }
+  list.innerHTML = state.parti.map((p, i) => `
+    <div class="parte-item">
+      <div>
+        ${p.doa ? '<span class="parte-badge doa">DOA</span>' : ''}
+        ${p.pdv ? '<span class="parte-badge pdv">PdV</span>' : ''}
+        <span class="parte-badge">▲ IN</span>
+      </div>
+      <div class="parte-info">
+        <div class="parte-code">▲ ${p.inCode} ${p.inSn ? '│ S/N: '+p.inSn : ''}</div>
+        ${p.outCode ? '<div class="parte-serial">▼ OUT: '+p.outCode+(p.outSn?' │ S/N: '+p.outSn:'')+'</div>' : ''}
+        ${p.difetto ? '<div class="parte-serial">Difetto: '+p.difetto+'</div>' : ''}
+        ${p.serviceTag ? '<div class="parte-serial">ServiceTag: '+p.serviceTag+'</div>' : ''}
+      </div>
+      <button class="parte-del" onclick="deleteParte(${i})">🗑</button>
+    </div>
+  `).join('');
+}
+
+function deleteParte(i) {
+  state.parti.splice(i, 1);
+  renderParti();
+}
+
+// ============================================================
+// PHOTOS
+// ============================================================
+function addPhotos(event) {
+  const files = Array.from(event.target.files);
+  files.forEach(f => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      state.photos.push(e.target.result);
+      renderPhotos();
+    };
+    reader.readAsDataURL(f);
+  });
+  event.target.value = '';
+}
+
+function renderPhotos() {
+  const grid = document.getElementById('photo-grid');
+  grid.innerHTML = state.photos.map((src, i) => `
+    <div class="photo-thumb">
+      <img src="${src}" alt="foto ${i+1}">
+      <button class="del-photo" onclick="deletePhoto(${i})">×</button>
+    </div>
+  `).join('');
+}
+
+function deletePhoto(i) {
+  state.photos.splice(i, 1);
+  renderPhotos();
+}
+
+function addVerbale(event) {
+  const files = Array.from(event.target.files).slice(0, 2 - state.verbali.length);
+  files.forEach(f => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      state.verbali.push({ name: f.name, data: e.target.result });
+      renderVerbali();
+    };
+    reader.readAsDataURL(f);
+  });
+  event.target.value = '';
+}
+
+function renderVerbali() {
+  const list = document.getElementById('verbale-list');
+  list.innerHTML = state.verbali.map((v, i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--surface);border-radius:8px;margin-bottom:6px;">
+      <span style="font-size:20px;">📄</span>
+      <span style="flex:1;font-size:13px;font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${v.name}</span>
+      <button onclick="deleteVerbale(${i})" style="background:none;border:none;color:var(--danger);font-size:16px;cursor:pointer;">🗑</button>
+    </div>
+  `).join('');
+}
+
+function deleteVerbale(i) { state.verbali.splice(i, 1); renderVerbali(); }
+
+// ============================================================
+// SUMMARY
+// ============================================================
+function buildSummary() {
+  // Collect from DOM
+  state.pdvRice = document.getElementById('pdv-rice').value;
+  state.pdvDesc = document.getElementById('pdv-desc').value;
+  state.pdvComune = document.getElementById('pdv-comune').value;
+  state.pdvProv = document.getElementById('pdv-prov').value.toUpperCase();
+  state.assetCode = document.getElementById('asset-code').value;
+  state.assetSerial = document.getElementById('asset-serial').value;
+  state.assetType = document.getElementById('asset-type').value;
+  state.flagCongiunto = document.getElementById('flag-congiunto').checked;
+  state.tecnico2 = document.getElementById('tecnico2').value;
+  state.flagContestuale = document.getElementById('flag-contestuale').checked;
+  state.noteIntervento = document.getElementById('note-intervento').value;
+  const customGuasto = document.getElementById('guasto-custom').value;
+  if (customGuasto) state.codiceGuasto = customGuasto;
+
+  const r = (key, val) => val ? `<div class="summary-row"><span class="summary-key">${key}</span><span class="summary-val">${val}</span></div>` : '';
+  const html = `
+    <div class="summary-section">
+      <div class="summary-title">📋 Ticket</div>
+      ${r('Numero Ticket', state.ticket)}
+      ${r('Tecnico', state.user)}
+      ${r('Data/Ora', state.datetime)}
+      ${state.flagCongiunto ? r('2° Tecnico', state.tecnico2 || 'n.d.') : ''}
+    </div>
+    <div class="summary-section">
+      <div class="summary-title">🏪 Punto Vendita</div>
+      ${r('RICE', state.pdvRice)}
+      ${r('Descrizione', state.pdvDesc)}
+      ${r('Comune', state.pdvComune + (state.pdvProv ? ' (' + state.pdvProv + ')' : ''))}
+    </div>
+    <div class="summary-section">
+      <div class="summary-title">🎰 Asset</div>
+      ${r('Asset Code', state.assetCode)}
+      ${r('Serial Number', state.assetSerial)}
+      ${r('Tipo', state.assetType)}
+    </div>
+    <div class="summary-section">
+      <div class="summary-title">🔧 Soluzione</div>
+      ${r('Esito', state.soluzione === 'P' ? '✅ Positivo' : state.soluzione === 'N' ? '❌ Negativo' : '–')}
+      ${r('Contestuale', state.flagContestuale ? 'Sì' : 'No')}
+      ${r('Codice Guasto', state.codiceGuasto)}
+      ${r('Note', state.noteIntervento ? state.noteIntervento.substring(0,80) + (state.noteIntervento.length > 80 ? '…' : '') : '')}
+    </div>
+    <div class="summary-section">
+      <div class="summary-title">📦 Parti (${state.parti.length})</div>
+      ${state.parti.length === 0 ? '<div style="color:var(--text-muted);font-size:13px;">Nessuna parte</div>' :
+        state.parti.map(p => r(p.inCode, (p.inSn || 'no S/N') + (p.doa ? ' [DOA]' : '') + (p.pdv ? ' [PdV]' : ''))).join('')}
+    </div>
+    <div class="summary-section">
+      <div class="summary-title">📸 Allegati</div>
+      ${r('Foto', state.photos.length + ' immagini')}
+      ${r('Verbali', state.verbali.map(v => v.name).join(', ') || 'nessuno')}
+    </div>
+  `;
+  document.getElementById('summary-content').innerHTML = html;
+
+  // API toggle
+  document.getElementById('api-config-row').style.display =
+    document.getElementById('send-api').checked ? 'block' : 'none';
+  document.getElementById('send-api').onchange = () => {
+    document.getElementById('api-config-row').style.display =
+      document.getElementById('send-api').checked ? 'block' : 'none';
+  };
+}
+
+// ============================================================
+// CHIUDI TICKET
+// ============================================================
+async function chiudiTicket() {
+  const payload = buildPayload();
+  const results = [];
+
+  // 1. API call (porta TUTTO: dati + foto base64 + verbali)
+  if (document.getElementById('send-api').checked) {
+    const endpoint = document.getElementById('api-endpoint').value;
+    const token = document.getElementById('api-token').value;
+    if (endpoint) {
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+          },
+          body: JSON.stringify(payload)
+        });
+        results.push(res.ok ? '✅ API: ticket inviato (' + res.status + ')' : '⚠️ API: ' + res.status);
+      } catch(e) { results.push('❌ API: ' + e.message); }
+    } else {
+      results.push('⚠️ Endpoint API mancante');
+    }
+  }
+
+  // 2. Condivisione nativa con FOTO allegate (Web Share — funziona iOS+Android)
+  if (document.getElementById('send-email').checked) {
+    const dest = document.getElementById('email-dest').value;
+    const body = buildEmailBody(payload);
+    const shared = await shareWithPhotos(payload, body, dest);
+    if (shared) results.push('📤 Condivisione aperta (con foto)');
+  }
+
+  // Sempre: salva localmente
+  saveLocal(payload);
+
+  goTo(5);
+  document.getElementById('success-msg').textContent = results.join(' · ') || 'Dati salvati localmente';
+  buildSuccessActions(payload);
+}
+
+// ── Condivisione nativa con foto + verbali allegati ──
+async function shareWithPhotos(payload, body, dest) {
+  // Prepara i file (foto + verbali) come oggetti File
+  const files = [];
+  try {
+    state.photos.forEach((src, i) => {
+      const f = dataURLtoFile(src, `foto_${payload.ticket}_${i+1}.jpg`);
+      if (f) files.push(f);
+    });
+    state.verbali.forEach((v) => {
+      const f = dataURLtoFile(v.data, v.name);
+      if (f) files.push(f);
+    });
+  } catch(e) {}
+
+  // Web Share API con file (mobile)
+  if (navigator.canShare && files.length && navigator.canShare({ files })) {
+    try {
+      await navigator.share({
+        title: 'Chiusura Ticket ' + payload.ticket,
+        text: body,
+        files
+      });
+      return true;
+    } catch(e) {
+      if (e.name === 'AbortError') return false;
+    }
+  }
+
+  // Web Share senza file (solo testo)
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: 'Chiusura Ticket ' + payload.ticket, text: body });
+      if (files.length) showToast('Allega le foto manualmente dalla galleria', '');
+      return true;
+    } catch(e) {
+      if (e.name === 'AbortError') return false;
+    }
+  }
+
+  // Fallback desktop: mailto (senza allegati) + avviso
+  const mailto = `mailto:${dest}?subject=${encodeURIComponent('[TVS] Chiusura Ticket ' + payload.ticket)}&body=${encodeURIComponent(body)}`;
+  window.open(mailto);
+  if (files.length) showToast('Su PC le foto vanno allegate a mano', '');
+  return true;
+}
+
+function dataURLtoFile(dataurl, filename) {
+  try {
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8 = new Uint8Array(n);
+    while (n--) u8[n] = bstr.charCodeAt(n);
+    return new File([u8], filename, { type: mime });
+  } catch(e) { return null; }
+}
+
+function buildSuccessActions(payload) {
+  const preview = buildEmailBody(payload);
+  document.getElementById('email-preview-container').innerHTML = `
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button class="btn btn-primary" style="flex:1;justify-content:center;" onclick="reShare()">📤 Condividi di nuovo</button>
+      <button class="btn btn-secondary" style="flex:1;justify-content:center;" onclick="downloadJSON()">💾 Scarica JSON</button>
+    </div>
+    <div style="text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;max-height:280px;overflow-y:auto;">
+      <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px;">ANTEPRIMA REPORT</div>
+      <pre style="font-size:11px;white-space:pre-wrap;font-family:'DM Mono',monospace;color:var(--text);">${escHtml(preview)}</pre>
+    </div>
+    <button class="btn btn-secondary" style="margin-top:12px;width:100%;justify-content:center;" onclick="copyEmail()">📋 Copia testo report</button>
+  `;
+  window._lastPayload = payload;
+}
+
+async function reShare() {
+  const p = window._lastPayload;
+  if (p) await shareWithPhotos(p, buildEmailBody(p), document.getElementById('email-dest').value);
+}
+
+function downloadJSON() {
+  const p = window._lastPayload;
+  if (!p) return;
+  const blob = new Blob([JSON.stringify(p, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'ticket_' + p.ticket + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================
+// PAYLOAD & EMAIL
+// ============================================================
+function buildPayload() {
+  return {
+    ticket: state.ticket,
+    tecnico: state.user,
+    datetime: state.datetime,
+    interventoCongiunto: state.flagCongiunto,
+    tecnico2: state.tecnico2,
+    pdv: { rice: state.pdvRice, desc: state.pdvDesc, comune: state.pdvComune, prov: state.pdvProv },
+    asset: { code: state.assetCode, serial: state.assetSerial, tipo: state.assetType },
+    soluzione: {
+      esito: state.soluzione,
+      contestuale: state.flagContestuale,
+      codiceGuasto: state.codiceGuasto,
+      note: state.noteIntervento
+    },
+    parti: state.parti,
+    foto: state.photos,
+    nFoto: state.photos.length,
+    verbali: state.verbali.map(v => ({ name: v.name, data: v.data })),
+    timestamp: new Date().toISOString()
+  };
+}
+
+function buildEmailBody(p) {
+  const sep = '─'.repeat(50);
+  const linea = (k, v) => v ? `  ${k.padEnd(22)}: ${v}\n` : '';
+  let body = `CHIUSURA TICKET – TVS SCS
+${sep}
+
+DATI TICKET
+${linea('Numero Ticket', p.ticket)}${linea('Tecnico', p.tecnico)}${linea('Data/Ora', p.datetime)}${p.interventoCongiunto ? linea('Intervento Congiunto', p.tecnico2 || 'sì') : ''}
+${sep}
+
+PUNTO VENDITA
+${linea('Codice RICE', p.pdv.rice)}${linea('Descrizione PdV', p.pdv.desc)}${linea('Comune / Prov', p.pdv.comune + (p.pdv.prov ? ' (' + p.pdv.prov + ')' : ''))}
+${sep}
+
+ASSET / TERMINALE
+${linea('Asset Code', p.asset.code)}${linea('Serial Number', p.asset.serial)}${linea('Tipo', p.asset.tipo)}
+${sep}
+
+SOLUZIONE
+${linea('Esito', p.soluzione.esito === 'P' ? 'POSITIVO' : p.soluzione.esito === 'N' ? 'NEGATIVO' : '–')}${linea('Contestuale', p.soluzione.contestuale ? 'Sì' : 'No')}${linea('Codice Guasto', p.soluzione.codiceGuasto)}
+Note Intervento:
+${p.soluzione.note ? p.soluzione.note.split('\n').map(l => '  ' + l).join('\n') : '  –'}
+${sep}
+
+PARTI UTILIZZATE (${p.parti.length})
+`;
+  if (p.parti.length === 0) {
+    body += '  Nessuna parte utilizzata\n';
+  } else {
+    p.parti.forEach((pt, i) => {
+      body += `\n  [${i+1}] PARTE INSTALLATA:\n`;
+      body += `       Codice : ${pt.inCode}\n`;
+      body += `       S/N    : ${pt.inSn || '–'}\n`;
+      if (pt.outCode) {
+        body += `       PARTE RITIRATA:\n`;
+        body += `       Codice : ${pt.outCode}\n`;
+        body += `       S/N    : ${pt.outSn || '–'}\n`;
+      }
+      if (pt.doa) body += `       [DOA] Cluster: ${pt.doaCluster}\n`;
+      if (pt.pdv) body += `       [Giacenza PdV]\n`;
+      if (pt.difetto) body += `       Difetto: ${pt.difetto}\n`;
+      if (pt.serviceTag) body += `       ServiceTag: ${pt.serviceTag}\n`;
+      if (pt.descGuasto) body += `       Desc: ${pt.descGuasto}\n`;
+    });
+  }
+  body += `
+${sep}
+
+ALLEGATI
+${linea('Foto', p.nFoto + ' immagine/i (allegate alla condivisione)')}${linea('Verbali', p.verbali.length ? p.verbali.map(v=>v.name).join(', ') : 'nessuno')}
+${sep}
+
+Generato da TVS Ticket App – ${p.timestamp}
+`;
+  return body;
+}
+
+function copyEmail() {
+  const p = buildPayload();
+  navigator.clipboard.writeText(buildEmailBody(p)).then(() => showToast('Email copiata!', 'success'));
+}
+
+// ============================================================
+// LOCAL SAVE
+// ============================================================
+function saveLocal(payload) {
+  try {
+    const key = 'tvs_ticket_' + payload.ticket + '_' + Date.now();
+    const stored = JSON.stringify(payload);
+    localStorage.setItem(key, stored);
+  } catch(e) {}
+}
+
+// ============================================================
+// INTERVENTO PARZIALE
+// ============================================================
+function interventoParziale() {
+  const payload = buildPayload ? buildPayload() : {};
+  saveLocal(payload);
+  showToast('Intervento parziale salvato', 'success');
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type === 'success' ? ' success-toast' : type === 'error' ? ' error-toast' : '');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function nuovoTicket() {
+  // Reset state
+  Object.assign(state, {
+    ticket:'', user:'', datetime:'',
+    pdvRice:'', pdvDesc:'', pdvComune:'', pdvProv:'',
+    assetCode:'', assetSerial:'', assetType:'',
+    flagCongiunto:false, tecnico2:'',
+    soluzione:'', flagContestuale:false,
+    codiceGuasto:'', noteIntervento:'',
+    parti:[], photos:[], verbali:[]
+  });
+  document.querySelectorAll('input:not([type=checkbox]):not([type=file]), select, textarea').forEach(el => {
+    if (!['email-dest','api-endpoint','api-token'].includes(el.id)) el.value = '';
+  });
+  document.querySelectorAll('input[type=checkbox]').forEach(el => el.checked = false);
+  renderParti(); renderPhotos(); renderVerbali();
+  goTo(0);
+}
+
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
 </script>
 </body>
 </html>
